@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brandkit — Brand Style Guide Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ─── Header ─────────────────────────────────────────── -->
+    <header class="site-header">
+      <div class="container">
+        <div class="logo">
+          <span class="logo-mark" aria-hidden="true">◆</span>
+          <span class="logo-text">Brandkit</span>
+        </div>
+        <p class="header-sub">Brand style guides &amp; content strategies, generated.</p>
+      </div>
+    </header>
+
+    <!-- ─── Input Section ─────────────────────────────────── -->
+    <section class="input-section" id="input-section">
+      <div class="container">
+
+        <div class="input-intro">
+          <h1>Build your brand kit in seconds.</h1>
+          <p>Upload photos to pull color and mood from your visuals, or fill in the form. The randomizer generates everything automatically — no photos or form required.</p>
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="photo-upload-wrap">
+          <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Upload brand photos">
+            <div class="drop-zone-idle" id="drop-idle">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+              </svg>
+              <p class="drop-label">Drop photos here or <button type="button" class="link-btn" id="photo-browse-btn">browse</button></p>
+              <p class="drop-hint">1–3 photos · JPEG, PNG, WebP · Color &amp; mood pull from these first</p>
+            </div>
+            <div class="photo-previews" id="photo-previews" hidden></div>
+          </div>
+          <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple hidden>
+        </div>
+
+        <!-- Brand Form -->
+        <form id="brand-form" class="brand-form" novalidate>
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="brand-name">Brand Name <span class="req">*</span></label>
+              <input type="text" id="brand-name" name="brand-name" placeholder="e.g., Verdant Kitchen" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label for="industry">Industry <span class="req">*</span></label>
+              <select id="industry" name="industry">
+                <option value="">Select industry…</option>
+                <option value="technology">Technology &amp; Software</option>
+                <option value="food-beverage">Food &amp; Beverage</option>
+                <option value="health-wellness">Health &amp; Wellness</option>
+                <option value="fashion-beauty">Fashion &amp; Beauty</option>
+                <option value="finance">Finance &amp; Fintech</option>
+                <option value="education">Education</option>
+                <option value="arts-entertainment">Arts &amp; Entertainment</option>
+                <option value="real-estate">Real Estate</option>
+                <option value="travel-hospitality">Travel &amp; Hospitality</option>
+                <option value="nonprofit">Non-profit &amp; Social Impact</option>
+                <option value="retail">Retail &amp; E-commerce</option>
+                <option value="professional-services">Professional Services</option>
+              </select>
+            </div>
+
+            <div class="form-group form-group--full">
+              <label for="description">One-sentence description</label>
+              <input type="text" id="description" name="description" placeholder="e.g., A plant-based restaurant celebrating seasonal, local ingredients">
+            </div>
+
+            <div class="form-group form-group--full">
+              <label for="what-does">What does the business or project do?</label>
+              <textarea id="what-does" name="what-does" rows="2" placeholder="Describe what you actually make, serve, or deliver…"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="audience">Target audience</label>
+              <input type="text" id="audience" name="audience" placeholder="e.g., Health-conscious urban professionals, 25–45">
+            </div>
+
+            <div class="form-group">
+              <label for="tone">Tone adjectives <span class="field-note">(comma-separated)</span></label>
+              <input type="text" id="tone" name="tone" placeholder="e.g., warm, honest, approachable, fresh">
+            </div>
+
+            <div class="form-group form-group--full">
+              <label for="avoid">Anything to avoid</label>
+              <input type="text" id="avoid" name="avoid" placeholder="e.g., clinical language, diet culture messaging, corporate jargon">
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Action Buttons -->
+        <div class="action-bar">
+          <button type="button" class="btn btn--demo" id="demo-btn" title="Auto-populate with a sample brand and generate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            Show me how it works
+          </button>
+          <button type="button" class="btn btn--ghost" id="randomize-btn" title="Generate a random brand kit — no form or photos needed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg>
+            Randomize
+          </button>
+          <button type="button" class="btn btn--primary" id="generate-btn">
+            Generate Brand Kit
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─── Output Section ────────────────────────────────── -->
+    <section class="output-section" id="output-section" hidden aria-live="polite">
+      <div class="container">
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loading-state" hidden>
+          <div class="loading-inner">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p class="loading-label" id="loading-label">Extracting colors…</p>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results" hidden>
+
+          <div class="results-header">
+            <h2 class="results-brand-name" id="results-brand-name"></h2>
+            <p class="results-summary" id="results-summary"></p>
+          </div>
+
+          <!-- ── Color Palette ─────────────────────────────── -->
+          <article class="kit-section" id="section-palette">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">01</span>
+                <h3>Color Palette</h3>
+              </div>
+              <button type="button" class="edit-btn" data-target="palette-edit" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="section-content" id="palette-content"></div>
+            <div class="edit-panel" id="palette-edit" hidden>
+              <label class="edit-label">Regeneration guidance</label>
+              <input type="text" class="edit-input" id="palette-guidance" placeholder="e.g., warmer tones, add coral, cooler and more muted, earthy greens">
+              <div class="edit-actions">
+                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('palette')">Regenerate palette</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('palette-edit')">Cancel</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- ── Typography ────────────────────────────────── -->
+          <article class="kit-section" id="section-typography">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">02</span>
+                <h3>Typography</h3>
+              </div>
+              <button type="button" class="edit-btn" data-target="typography-edit" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="section-content" id="typography-content"></div>
+            <div class="edit-panel" id="typography-edit" hidden>
+              <label class="edit-label">Regeneration guidance</label>
+              <input type="text" class="edit-input" id="typography-guidance" placeholder="e.g., more elegant serif, bolder and geometric, friendly and rounded">
+              <div class="edit-actions">
+                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('typography')">Regenerate fonts</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('typography-edit')">Cancel</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- ── Brand Voice ────────────────────────────────── -->
+          <article class="kit-section" id="section-voice">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">03</span>
+                <h3>Brand Voice</h3>
+              </div>
+              <button type="button" class="edit-btn" data-target="voice-edit" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="section-content" id="voice-content"></div>
+            <div class="edit-panel" id="voice-edit" hidden>
+              <label class="edit-label">Regeneration guidance</label>
+              <input type="text" class="edit-input" id="voice-guidance" placeholder="e.g., more conversational, more authoritative, add playfulness, less formal">
+              <div class="edit-actions">
+                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('voice')">Regenerate voice</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('voice-edit')">Cancel</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- ── Tagline ─────────────────────────────────────── -->
+          <article class="kit-section" id="section-tagline">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">04</span>
+                <h3>Tagline</h3>
+              </div>
+              <button type="button" class="edit-btn" data-target="tagline-edit" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="section-content" id="tagline-content"></div>
+            <div class="edit-panel" id="tagline-edit" hidden>
+              <label class="edit-label">Regeneration guidance</label>
+              <input type="text" class="edit-input" id="tagline-guidance" placeholder="e.g., shorter and punchier, more aspirational, clever wordplay, direct and benefit-focused">
+              <div class="edit-actions">
+                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('tagline')">Regenerate taglines</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('tagline-edit')">Cancel</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- ── Visual Mockup ───────────────────────────────── -->
+          <article class="kit-section" id="section-mockup">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">05</span>
+                <h3>Visual Mockup</h3>
+              </div>
+              <span class="section-badge">Preview only</span>
+            </div>
+            <div class="section-content" id="mockup-content"></div>
+          </article>
+
+          <!-- ── Content Strategy ───────────────────────────── -->
+          <article class="kit-section" id="section-strategy">
+            <div class="kit-section-head">
+              <div class="kit-section-title">
+                <span class="section-num" aria-hidden="true">06</span>
+                <h3>Content Strategy</h3>
+              </div>
+              <button type="button" class="edit-btn" data-target="strategy-edit" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="section-content" id="strategy-content"></div>
+            <div class="edit-panel" id="strategy-edit" hidden>
+              <label class="edit-label">Regeneration guidance</label>
+              <input type="text" class="edit-input" id="strategy-guidance" placeholder="e.g., more educational focus, add LinkedIn, emphasize short-form video, B2B audience">
+              <div class="edit-actions">
+                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('strategy')">Regenerate strategy</button>
+                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('strategy-edit')">Cancel</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- ── Download & Reset ───────────────────────────── -->
+          <div class="output-footer">
+            <button type="button" class="btn btn--primary btn--lg" id="download-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+              Download PDF
+            </button>
+            <button type="button" class="btn btn--ghost" id="reset-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+              Start over
+            </button>
+          </div>
+
+        </div><!-- /results -->
+      </div>
+    </section>
+
+    <!-- ─── Footer ────────────────────────────────────────── -->
+    <footer class="site-footer">
+      <div class="container">
+        <p>Brandkit · Grounded in graphic design &amp; content strategy best practices · Nothing saved server-side</p>
+      </div>
+    </footer>
+
+  </div><!-- /app -->
+
+  <script src="app.js"></script>
+</body>
+</html>
