@@ -906,12 +906,24 @@ function selectTagline(idx) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   16. RENDER — VISUAL MOCKUP
+   16. RENDER — VISUAL MOCKUPS (5 distinct contexts)
    ───────────────────────────────────────────────────────────── */
+
+function mockupCell(frameClass, innerHtml, label, context) {
+  return `
+    <div class="mockup-cell">
+      <div class="mockup-frame ${frameClass}">${innerHtml}</div>
+      <div class="mockup-meta">
+        <span class="mockup-meta-label">${label}</span>
+        <span class="mockup-meta-context">${context}</span>
+      </div>
+    </div>`;
+}
 
 function renderMockup(palette, fonts, brandData) {
   const { brandName, taglines = [] } = brandData;
   const taglineText = (taglines[0]?.text || brandName).replace(/"/g, '');
+  const shortTag    = taglineText.length > 45 ? taglineText.slice(0, 45) + '…' : taglineText;
   const p  = palette.primary.hex;
   const s  = palette.secondary.hex;
   const a  = palette.accent.hex;
@@ -920,55 +932,90 @@ function renderMockup(palette, fonts, brandData) {
   const tp = textOnBg(p);
   const ts = textOnBg(s);
   const tl = textOnBg(lc);
-  const hF = `'${fonts.heading}',serif`;
-  const bF = `'${fonts.body}',sans-serif`;
+  const td = textOnBg(dc);
+  const ta = textOnBg(a);
+  const hF = `'${fonts.heading}',Georgia,serif`;
+  const bF = `'${fonts.body}',system-ui,sans-serif`;
+  const hw = fonts.hw;
 
-  // Panel 1: Brand card
-  const panel1 = `
-    <div class="mockup-panel" style="background:${p};padding:20px;justify-content:flex-end;">
-      <div style="font-family:${hF};font-weight:${fonts.hw};font-size:clamp(1rem,3vw,1.5rem);color:${tp};line-height:1.2;margin-bottom:6px;">${brandName}</div>
-      <div style="font-family:${bF};font-size:clamp(0.65rem,1.5vw,0.8rem);color:${tp};opacity:0.75;line-height:1.4;">${taglineText}</div>
-      <div style="width:32px;height:3px;background:${a};margin-top:12px;border-radius:2px;"></div>
-    </div>`;
-
-  // Panel 2: Social post
-  const panel2 = `
-    <div class="mockup-panel" style="background:${lc};padding:16px;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <div style="width:24px;height:24px;border-radius:50%;background:${p};"></div>
-        <span style="font-family:${bF};font-size:0.7rem;font-weight:600;color:${tl};">${brandName}</span>
+  // ── 1. Business Card (landscape 1.6:1) ─────────────────
+  const card = `
+    <div style="display:flex;width:100%;height:100%;">
+      <div style="width:38%;background:${p};display:flex;flex-direction:column;justify-content:space-between;padding:11% 9%;">
+        <div style="width:20px;height:20px;border-radius:3px;background:${a};opacity:0.85;"></div>
+        <div>
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.9em,2.5vw,1.3em);color:${tp};line-height:1.15;letter-spacing:-0.01em;">${brandName}</div>
+          <div style="width:22px;height:2.5px;background:${a};border-radius:2px;margin-top:8%;"></div>
+        </div>
       </div>
-      <div style="font-family:${hF};font-weight:${fonts.hw};font-size:clamp(0.75rem,2vw,1rem);color:${tl};line-height:1.3;flex:1;">${taglineText}</div>
-      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-        <div style="background:${a};color:${textOnBg(a)};font-family:${bF};font-size:0.65rem;font-weight:700;padding:5px 10px;border-radius:4px;">Learn more</div>
+      <div style="flex:1;background:${lc};display:flex;flex-direction:column;justify-content:center;padding:9% 11%;">
+        <div style="font-family:${bF};font-size:clamp(0.55em,1.4vw,0.78em);color:${tl};opacity:0.65;line-height:1.55;margin-bottom:12%;">${shortTag}</div>
+        <div style="font-family:${bF};font-size:clamp(0.45em,1vw,0.6em);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${tl};opacity:0.35;">${brandName.toLowerCase().replace(/\s+/g,'')}.com</div>
       </div>
     </div>`;
 
-  // Panel 3: Web header
-  const panel3 = `
-    <div class="mockup-panel" style="background:${dc};padding:16px;justify-content:center;">
-      <div style="font-family:${bF};font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${textOnBg(dc)};opacity:0.5;margin-bottom:8px;">${brandName}</div>
-      <div style="font-family:${hF};font-weight:${fonts.hw};font-size:clamp(0.85rem,2.5vw,1.2rem);color:${textOnBg(dc)};line-height:1.25;text-align:center;">${taglineText}</div>
-      <div style="display:flex;gap:8px;margin-top:14px;justify-content:center;">
-        <div style="background:${a};color:${textOnBg(a)};font-family:${bF};font-size:0.65rem;font-weight:700;padding:6px 12px;border-radius:4px;">Get started</div>
-        <div style="background:transparent;color:${textOnBg(dc)};font-family:${bF};font-size:0.65rem;font-weight:600;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);">Learn more</div>
+  // ── 2. Instagram Post (square 1:1) ──────────────────────
+  const social = `
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
+      <div style="height:7px;background:${a};flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;gap:7px;padding:7% 8% 4%;">
+        <div style="width:20px;height:20px;border-radius:50%;background:${p};flex-shrink:0;"></div>
+        <span style="font-family:${bF};font-size:clamp(0.5em,1.2vw,0.65em);font-weight:700;color:${tl};letter-spacing:0.02em;">${brandName.toUpperCase()}</span>
       </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2% 10%;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.85em,2.5vw,1.35em);color:${tl};line-height:1.2;letter-spacing:-0.01em;">"${shortTag}"</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5% 8% 7%;">
+        <div style="width:18px;height:2px;background:${p};border-radius:2px;"></div>
+        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.42em,1vw,0.58em);font-weight:700;padding:4% 9%;border-radius:3px;letter-spacing:0.03em;">Follow →</div>
+      </div>
+    </div>`;
+
+  // ── 3. Web Hero (wide 2.4:1) ────────────────────────────
+  const hero = `
+    <div style="display:flex;width:100%;height:100%;">
+      <div style="flex:1.3;background:${dc};display:flex;flex-direction:column;justify-content:center;padding:7% 8%;">
+        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.55em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.75em,2vw,1.15em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
+        <div style="display:inline-flex;gap:6px;">
+          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
+          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
+        </div>
+      </div>
+      <div style="flex:0.7;background:${p};"></div>
+    </div>`;
+
+  // ── 4. Email Banner (very wide 4:1) ─────────────────────
+  const email = `
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;background:${s};padding:0 5%;">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="width:22px;height:22px;border-radius:4px;background:${p};flex-shrink:0;"></div>
+        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.6em,1.8vw,0.95em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
+      </div>
+      <div style="font-family:${bF};font-size:clamp(0.4em,1.1vw,0.62em);color:${ts};opacity:0.6;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
+      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.55em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
+    </div>`;
+
+  // ── 5. Product / Packaging Label (square 1:1) ───────────
+  const label = `
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:#fff;">
+      <div style="background:${p};padding:14% 8% 12%;text-align:center;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.2vw,1.1em);color:${tp};line-height:1.15;letter-spacing:-0.01em;">${brandName}</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8%;">
+        <div style="width:18px;height:18px;border-radius:50%;background:${a};margin-bottom:8%;"></div>
+        <div style="font-family:${bF};font-size:clamp(0.45em,1.1vw,0.62em);color:#444;text-align:center;line-height:1.5;">${shortTag}</div>
+      </div>
+      <div style="height:5px;background:${a};"></div>
     </div>`;
 
   return `
     <div class="mockup-grid">
-      <div>
-        ${panel1}
-        <div class="mockup-label">Brand Card</div>
-      </div>
-      <div>
-        ${panel2}
-        <div class="mockup-label">Social Post</div>
-      </div>
-      <div>
-        ${panel3}
-        <div class="mockup-label">Web Header</div>
-      </div>
+      ${mockupCell('mockup-frame--card',   card,   'Business Card', 'Print / stationery')}
+      ${mockupCell('mockup-frame--social', social, 'Social Post',   'Instagram / LinkedIn')}
+      ${mockupCell('mockup-frame--hero',   hero,   'Web Hero',      'Landing page')}
+      ${mockupCell('mockup-frame--email',  email,  'Email Banner',  'Newsletter header')}
+      ${mockupCell('mockup-frame--label',  label,  'Product Label', 'Packaging / tags')}
     </div>`;
 }
 
@@ -1161,9 +1208,9 @@ async function generateKit(brandData) {
     kit.palette, kit.fonts, { ...brandData, taglines: kit.taglines }
   );
 
-  loadingState.hidden = false;
   loadingState.hidden = true;
   results.hidden      = false;
+  switchTab('palette');
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1327,8 +1374,13 @@ async function exportPDF() {
 
   try {
     await document.fonts.ready;
-    // Temporarily hide edit panels and buttons for clean capture
-    document.querySelectorAll('.edit-panel,.edit-btn,.output-footer,.section-badge').forEach(el => el.dataset.wasHidden = el.hidden || '', el.hidden = true);
+    // Show all tab panels and hide UI chrome for clean capture
+    const panels = document.querySelectorAll('.tab-panel');
+    panels.forEach(p => { p.dataset.wasHidden = p.hidden; p.hidden = false; });
+    document.querySelectorAll('.edit-panel,.edit-btn,.tab-bar-wrap,.panel-nav,.results-header-actions,.section-badge').forEach(el => {
+      el.dataset.wasHidden = el.hidden || '';
+      el.hidden = true;
+    });
 
     const resultsEl = document.getElementById('results');
     const canvas = await window.html2canvas(resultsEl, {
@@ -1338,11 +1390,13 @@ async function exportPDF() {
       logging: false,
     });
 
-    // Restore hidden elements
+    // Restore UI
+    panels.forEach(p => { p.hidden = p.dataset.wasHidden === 'true'; delete p.dataset.wasHidden; });
     document.querySelectorAll('[data-was-hidden]').forEach(el => {
       el.hidden = el.dataset.wasHidden === 'true';
       delete el.dataset.wasHidden;
     });
+    switchTab(activeTab);
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -1378,7 +1432,48 @@ function loadScript(src) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   25. EVENT LISTENERS
+   25. TAB NAVIGATION
+   ───────────────────────────────────────────────────────────── */
+
+const TAB_ORDER = ['palette', 'typography', 'voice', 'tagline', 'mockup', 'strategy'];
+let activeTab = 'palette';
+
+function switchTab(tabId) {
+  if (!TAB_ORDER.includes(tabId)) return;
+  activeTab = tabId;
+
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tabId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+
+  // Show/hide panels
+  TAB_ORDER.forEach(id => {
+    const panel = document.getElementById(`panel-${id}`);
+    if (panel) panel.hidden = id !== tabId;
+  });
+
+  // Update prev/next state
+  const idx = TAB_ORDER.indexOf(tabId);
+  const prevBtn = document.getElementById('prev-tab-btn');
+  const nextBtn = document.getElementById('next-tab-btn');
+  if (prevBtn) prevBtn.disabled = idx === 0;
+  if (nextBtn) nextBtn.disabled = idx === TAB_ORDER.length - 1;
+  const countEl = document.getElementById('panel-nav-count');
+  if (countEl) countEl.textContent = `${idx + 1} / ${TAB_ORDER.length}`;
+
+  // Scroll tab button into view (for mobile overflow)
+  document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+
+  // Close any open edit panel
+  document.querySelectorAll('.edit-panel').forEach(p => p.hidden = true);
+  document.querySelectorAll('.edit-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded', 'false'); });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   26. EVENT LISTENERS
    ───────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1437,33 +1532,47 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('photo-input').click(); }
   });
 
-  // Edit toggle buttons
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target;
-      const panel    = document.getElementById(targetId);
-      if (!panel) return;
-      const isOpen = !panel.hidden;
-      // Close all panels first
-      document.querySelectorAll('.edit-panel').forEach(p => p.hidden = true);
-      document.querySelectorAll('.edit-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded','false'); });
-      if (!isOpen) {
-        panel.hidden = false;
-        btn.classList.add('active');
-        btn.setAttribute('aria-expanded', 'true');
-        panel.querySelector('.edit-input')?.focus();
-      }
-    });
+  // Tab bar clicks (delegated — works for dynamically-rendered tabs too)
+  document.getElementById('tab-bar')?.addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn');
+    if (btn?.dataset.tab) switchTab(btn.dataset.tab);
   });
 
-  // Enter key in edit inputs triggers regeneration
-  document.querySelectorAll('.edit-input').forEach(input => {
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const section = input.id.replace('-guidance', '');
-        regenSection(section);
-      }
-    });
+  // Prev / Next
+  document.getElementById('prev-tab-btn')?.addEventListener('click', () => {
+    const idx = TAB_ORDER.indexOf(activeTab);
+    if (idx > 0) switchTab(TAB_ORDER[idx - 1]);
+  });
+  document.getElementById('next-tab-btn')?.addEventListener('click', () => {
+    const idx = TAB_ORDER.indexOf(activeTab);
+    if (idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]);
+  });
+
+  // Edit toggle buttons (delegated — panels are inside dynamically shown tabs)
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.edit-btn');
+    if (!btn) return;
+    const targetId = btn.dataset.target;
+    const panel    = document.getElementById(targetId);
+    if (!panel) return;
+    const isOpen = !panel.hidden;
+    document.querySelectorAll('.edit-panel').forEach(p => p.hidden = true);
+    document.querySelectorAll('.edit-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded', 'false'); });
+    if (!isOpen) {
+      panel.hidden = false;
+      btn.classList.add('active');
+      btn.setAttribute('aria-expanded', 'true');
+      panel.querySelector('.edit-input')?.focus();
+    }
+  });
+
+  // Enter key in edit inputs triggers regeneration (delegated)
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const input = e.target.closest('.edit-input');
+    if (!input) return;
+    const section = input.id.replace('-guidance', '');
+    regenSection(section);
   });
 
   // PDF download

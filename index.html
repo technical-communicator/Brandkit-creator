@@ -124,165 +124,207 @@
 
     <!-- ─── Output Section ────────────────────────────────── -->
     <section class="output-section" id="output-section" hidden aria-live="polite">
-      <div class="container">
 
-        <!-- Loading State -->
-        <div class="loading-state" id="loading-state" hidden>
-          <div class="loading-inner">
-            <div class="loading-spinner" aria-hidden="true"></div>
-            <p class="loading-label" id="loading-label">Extracting colors…</p>
+      <!-- Loading State -->
+      <div class="loading-state" id="loading-state" hidden>
+        <div class="loading-inner">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <p class="loading-label" id="loading-label">Extracting colors…</p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results" id="results" hidden>
+
+        <!-- Brand identity bar -->
+        <div class="results-header">
+          <div class="container">
+            <div class="results-header-inner">
+              <div>
+                <h2 class="results-brand-name" id="results-brand-name"></h2>
+                <p class="results-summary" id="results-summary"></p>
+              </div>
+              <div class="results-header-actions">
+                <button type="button" class="btn btn--ghost btn--sm" id="reset-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                  Start over
+                </button>
+                <button type="button" class="btn btn--primary btn--sm" id="download-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                  Download PDF
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Results -->
-        <div class="results" id="results" hidden>
-
-          <div class="results-header">
-            <h2 class="results-brand-name" id="results-brand-name"></h2>
-            <p class="results-summary" id="results-summary"></p>
+        <!-- Tab Bar -->
+        <div class="tab-bar-wrap">
+          <div class="container">
+            <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Brand kit sections">
+              <button class="tab-btn active" data-tab="palette" role="tab" aria-selected="true" aria-controls="panel-palette">
+                <span class="tab-num">01</span><span class="tab-label">Colors</span>
+              </button>
+              <button class="tab-btn" data-tab="typography" role="tab" aria-selected="false" aria-controls="panel-typography">
+                <span class="tab-num">02</span><span class="tab-label">Type</span>
+              </button>
+              <button class="tab-btn" data-tab="voice" role="tab" aria-selected="false" aria-controls="panel-voice">
+                <span class="tab-num">03</span><span class="tab-label">Voice</span>
+              </button>
+              <button class="tab-btn" data-tab="tagline" role="tab" aria-selected="false" aria-controls="panel-tagline">
+                <span class="tab-num">04</span><span class="tab-label">Tagline</span>
+              </button>
+              <button class="tab-btn" data-tab="mockup" role="tab" aria-selected="false" aria-controls="panel-mockup">
+                <span class="tab-num">05</span><span class="tab-label">Mockup</span>
+              </button>
+              <button class="tab-btn" data-tab="strategy" role="tab" aria-selected="false" aria-controls="panel-strategy">
+                <span class="tab-num">06</span><span class="tab-label">Strategy</span>
+              </button>
+            </nav>
           </div>
+        </div>
 
-          <!-- ── Color Palette ─────────────────────────────── -->
-          <article class="kit-section" id="section-palette">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">01</span>
-                <h3>Color Palette</h3>
-              </div>
-              <button type="button" class="edit-btn" data-target="palette-edit" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
-                Edit
+        <!-- Tab Panels -->
+        <div class="tab-panels">
+          <div class="container">
+
+            <!-- 01 Colors -->
+            <div class="tab-panel" id="panel-palette" role="tabpanel">
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">01</span><h3>Color Palette</h3></div>
+                  <button type="button" class="edit-btn" data-target="palette-edit" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>Edit
+                  </button>
+                </div>
+                <div class="section-content" id="palette-content"></div>
+                <div class="edit-panel" id="palette-edit" hidden>
+                  <label class="edit-label">Regeneration guidance</label>
+                  <input type="text" class="edit-input" id="palette-guidance" placeholder="e.g., warmer tones, add coral, cooler and more muted, earthy greens">
+                  <div class="edit-actions">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('palette')">Regenerate palette</button>
+                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('palette-edit')">Cancel</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- 02 Type -->
+            <div class="tab-panel" id="panel-typography" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">02</span><h3>Typography</h3></div>
+                  <button type="button" class="edit-btn" data-target="typography-edit" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>Edit
+                  </button>
+                </div>
+                <div class="section-content" id="typography-content"></div>
+                <div class="edit-panel" id="typography-edit" hidden>
+                  <label class="edit-label">Regeneration guidance</label>
+                  <input type="text" class="edit-input" id="typography-guidance" placeholder="e.g., more elegant serif, bolder and geometric, friendly and rounded">
+                  <div class="edit-actions">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('typography')">Regenerate fonts</button>
+                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('typography-edit')">Cancel</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- 03 Voice -->
+            <div class="tab-panel" id="panel-voice" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">03</span><h3>Brand Voice</h3></div>
+                  <button type="button" class="edit-btn" data-target="voice-edit" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>Edit
+                  </button>
+                </div>
+                <div class="section-content" id="voice-content"></div>
+                <div class="edit-panel" id="voice-edit" hidden>
+                  <label class="edit-label">Regeneration guidance</label>
+                  <input type="text" class="edit-input" id="voice-guidance" placeholder="e.g., more conversational, more authoritative, add playfulness, less formal">
+                  <div class="edit-actions">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('voice')">Regenerate voice</button>
+                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('voice-edit')">Cancel</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- 04 Tagline -->
+            <div class="tab-panel" id="panel-tagline" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">04</span><h3>Tagline</h3></div>
+                  <button type="button" class="edit-btn" data-target="tagline-edit" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>Edit
+                  </button>
+                </div>
+                <div class="section-content" id="tagline-content"></div>
+                <div class="edit-panel" id="tagline-edit" hidden>
+                  <label class="edit-label">Regeneration guidance</label>
+                  <input type="text" class="edit-input" id="tagline-guidance" placeholder="e.g., shorter and punchier, more aspirational, clever wordplay, direct and benefit-focused">
+                  <div class="edit-actions">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('tagline')">Regenerate taglines</button>
+                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('tagline-edit')">Cancel</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- 05 Mockup -->
+            <div class="tab-panel" id="panel-mockup" role="tabpanel" hidden>
+              <article class="kit-section kit-section--mockup">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">05</span><h3>Visual Mockups</h3></div>
+                  <span class="section-badge">5 contexts</span>
+                </div>
+                <div class="section-content section-content--flush" id="mockup-content"></div>
+              </article>
+            </div>
+
+            <!-- 06 Strategy -->
+            <div class="tab-panel" id="panel-strategy" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">06</span><h3>Content Strategy</h3></div>
+                  <button type="button" class="edit-btn" data-target="strategy-edit" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>Edit
+                  </button>
+                </div>
+                <div class="section-content" id="strategy-content"></div>
+                <div class="edit-panel" id="strategy-edit" hidden>
+                  <label class="edit-label">Regeneration guidance</label>
+                  <input type="text" class="edit-input" id="strategy-guidance" placeholder="e.g., more educational focus, add LinkedIn, emphasize short-form video, B2B audience">
+                  <div class="edit-actions">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('strategy')">Regenerate strategy</button>
+                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('strategy-edit')">Cancel</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+          </div><!-- /container -->
+        </div><!-- /tab-panels -->
+
+        <!-- Prev / Next navigation -->
+        <div class="panel-nav">
+          <div class="container">
+            <div class="panel-nav-inner">
+              <button type="button" class="btn btn--ghost btn--sm" id="prev-tab-btn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                Previous
+              </button>
+              <span class="panel-nav-count" id="panel-nav-count">1 / 6</span>
+              <button type="button" class="btn btn--ghost btn--sm" id="next-tab-btn">
+                Next
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
               </button>
             </div>
-            <div class="section-content" id="palette-content"></div>
-            <div class="edit-panel" id="palette-edit" hidden>
-              <label class="edit-label">Regeneration guidance</label>
-              <input type="text" class="edit-input" id="palette-guidance" placeholder="e.g., warmer tones, add coral, cooler and more muted, earthy greens">
-              <div class="edit-actions">
-                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('palette')">Regenerate palette</button>
-                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('palette-edit')">Cancel</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- ── Typography ────────────────────────────────── -->
-          <article class="kit-section" id="section-typography">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">02</span>
-                <h3>Typography</h3>
-              </div>
-              <button type="button" class="edit-btn" data-target="typography-edit" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
-                Edit
-              </button>
-            </div>
-            <div class="section-content" id="typography-content"></div>
-            <div class="edit-panel" id="typography-edit" hidden>
-              <label class="edit-label">Regeneration guidance</label>
-              <input type="text" class="edit-input" id="typography-guidance" placeholder="e.g., more elegant serif, bolder and geometric, friendly and rounded">
-              <div class="edit-actions">
-                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('typography')">Regenerate fonts</button>
-                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('typography-edit')">Cancel</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- ── Brand Voice ────────────────────────────────── -->
-          <article class="kit-section" id="section-voice">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">03</span>
-                <h3>Brand Voice</h3>
-              </div>
-              <button type="button" class="edit-btn" data-target="voice-edit" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
-                Edit
-              </button>
-            </div>
-            <div class="section-content" id="voice-content"></div>
-            <div class="edit-panel" id="voice-edit" hidden>
-              <label class="edit-label">Regeneration guidance</label>
-              <input type="text" class="edit-input" id="voice-guidance" placeholder="e.g., more conversational, more authoritative, add playfulness, less formal">
-              <div class="edit-actions">
-                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('voice')">Regenerate voice</button>
-                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('voice-edit')">Cancel</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- ── Tagline ─────────────────────────────────────── -->
-          <article class="kit-section" id="section-tagline">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">04</span>
-                <h3>Tagline</h3>
-              </div>
-              <button type="button" class="edit-btn" data-target="tagline-edit" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
-                Edit
-              </button>
-            </div>
-            <div class="section-content" id="tagline-content"></div>
-            <div class="edit-panel" id="tagline-edit" hidden>
-              <label class="edit-label">Regeneration guidance</label>
-              <input type="text" class="edit-input" id="tagline-guidance" placeholder="e.g., shorter and punchier, more aspirational, clever wordplay, direct and benefit-focused">
-              <div class="edit-actions">
-                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('tagline')">Regenerate taglines</button>
-                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('tagline-edit')">Cancel</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- ── Visual Mockup ───────────────────────────────── -->
-          <article class="kit-section" id="section-mockup">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">05</span>
-                <h3>Visual Mockup</h3>
-              </div>
-              <span class="section-badge">Preview only</span>
-            </div>
-            <div class="section-content" id="mockup-content"></div>
-          </article>
-
-          <!-- ── Content Strategy ───────────────────────────── -->
-          <article class="kit-section" id="section-strategy">
-            <div class="kit-section-head">
-              <div class="kit-section-title">
-                <span class="section-num" aria-hidden="true">06</span>
-                <h3>Content Strategy</h3>
-              </div>
-              <button type="button" class="edit-btn" data-target="strategy-edit" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
-                Edit
-              </button>
-            </div>
-            <div class="section-content" id="strategy-content"></div>
-            <div class="edit-panel" id="strategy-edit" hidden>
-              <label class="edit-label">Regeneration guidance</label>
-              <input type="text" class="edit-input" id="strategy-guidance" placeholder="e.g., more educational focus, add LinkedIn, emphasize short-form video, B2B audience">
-              <div class="edit-actions">
-                <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('strategy')">Regenerate strategy</button>
-                <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('strategy-edit')">Cancel</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- ── Download & Reset ───────────────────────────── -->
-          <div class="output-footer">
-            <button type="button" class="btn btn--primary btn--lg" id="download-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-              Download PDF
-            </button>
-            <button type="button" class="btn btn--ghost" id="reset-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
-              Start over
-            </button>
           </div>
+        </div>
 
-        </div><!-- /results -->
-      </div>
+      </div><!-- /results -->
     </section>
 
     <!-- ─── Footer ────────────────────────────────────────── -->
