@@ -1154,7 +1154,7 @@ function selectTagline(idx) {
    WORDMARK GENERATOR & RENDERER
    ───────────────────────────────────────────────────────────── */
 
-function generateWordmark(brandData, fonts, palette) {
+function generateWordmark(brandData, fonts, palette, styleOverrides = null) {
   const { brandName, archetype = '', taglines = [] } = brandData;
   const arch = ARCHETYPES[archetype];
   const tagline = taglines[0]?.text || '';
@@ -1171,107 +1171,224 @@ function generateWordmark(brandData, fonts, palette) {
   // Initials for marked variant
   const initials = brandName.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
 
-  return { displayName, initials, tagline, wWeight, wCase, wTracking, fonts, palette };
+  // Style variant indices — persist like mockupVariants so refresh is explicit
+  const prev = kit.wordmarkVariants || {};
+  const variants = styleOverrides || {
+    logotype: prev.logotype ?? Math.floor(Math.random() * 3),
+    display:  prev.display  ?? Math.floor(Math.random() * 3),
+    lockup:   prev.lockup   ?? Math.floor(Math.random() * 3),
+    marked:   prev.marked   ?? Math.floor(Math.random() * 3),
+  };
+  kit.wordmarkVariants = variants;
+
+  return { displayName, initials, tagline, wWeight, wCase, wTracking, fonts, palette, variants };
 }
 
 function renderWordmark(wmData) {
   if (!wmData) return '<p class="voice-intro">Generate a brand kit first to see your wordmarks.</p>';
-  const { displayName, initials, tagline, wWeight, wTracking, fonts, palette } = wmData;
+  const { displayName, initials, tagline, wWeight, wTracking, fonts, palette, variants } = wmData;
   const p  = palette.primary.hex;
+  const s  = palette.secondary.hex;
   const a  = palette.accent.hex;
   const lc = palette.light.hex;
   const dc = palette.dark.hex;
-  const tp = textOnBg(p);
-  const td = textOnBg(dc);
-  const tl = textOnBg(lc);
-  const hF = `'${fonts.heading}',Georgia,serif`;
-  const shortTag = tagline.length > 50 ? tagline.slice(0, 50) + '…' : tagline;
+  const tp = textOnBg(p), ts = textOnBg(s), ta = textOnBg(a), td = textOnBg(dc), tl = textOnBg(lc);
+  const hFF = fonts.heading.replace(/'/g, '');
+  const hF  = `${hFF},Georgia,serif`;
+  const shortTag  = (tagline.length > 52 ? tagline.slice(0, 52) + '…' : tagline).toUpperCase();
+  const v = variants || { logotype: 0, display: 0, lockup: 0, marked: 0 };
 
   function wmCard(id, label, svgContent, desc) {
+    const svgId = `svg-wm-${id}`;
+    const svgOut = svgContent.replace(/id="svg-wm-/, `id="svg-wm-`);
     return `
       <div class="wm-card" id="wm-card-${id}">
-        <div class="wm-preview">${svgContent}</div>
+        <div class="wm-preview">${svgOut}</div>
+        <div class="wm-cell-actions">
+          <button class="wm-action-btn" onclick="regenWordmarkCard('${id}')" title="New style variant">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>
+          </button>
+          <button class="wm-action-btn" onclick="downloadWordmarkSvg('${id}')" title="Download SVG">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v8m0 0L5 8m3 3l3-3M3 13h10"/></svg>
+          </button>
+        </div>
         <div class="wm-card-foot">
           <div>
             <div class="wm-label">${label}</div>
             <div class="wm-desc">${desc}</div>
           </div>
-          <button class="btn btn--ghost btn--sm wm-download-btn" onclick="downloadWordmark('${id}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-            PNG
-          </button>
         </div>
       </div>`;
   }
 
-  // 1. Logotype — name in heading font, natural case
-  const logotypeSvg = `
-    <svg id="svg-logotype" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+  // ── 1. LOGOTYPE — name in heading font ──────────────────────
+  const logotypeVariants = [
+    // V0: Name centred on light, primary colour
+    `<svg id="svg-wm-logotype" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
       <rect width="480" height="160" fill="${lc}"/>
-      <text x="240" y="100" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
-        font-size="56" letter-spacing="${wTracking}" fill="${p}"
+      <text x="240" y="82" font-family="${hF}" font-weight="${wWeight}"
+        font-size="58" letter-spacing="${wTracking}" fill="${p}"
         text-anchor="middle" dominant-baseline="middle">${displayName}</text>
-    </svg>`;
-
-  // 2. Display — all caps, tight track, on dark
-  const displayStr = displayName.toUpperCase();
-  const displaySvg = `
-    <svg id="svg-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+    </svg>`,
+    // V1: Name on dark, accent colour
+    `<svg id="svg-wm-logotype" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
       <rect width="480" height="160" fill="${dc}"/>
-      <text x="240" y="96" font-family="${hF.replace(/'/g,'')}" font-weight="900"
-        font-size="52" letter-spacing="0.12em" fill="${a}"
-        text-anchor="middle" dominant-baseline="middle">${displayStr}</text>
-    </svg>`;
+      <text x="240" y="82" font-family="${hF}" font-weight="${wWeight}"
+        font-size="58" letter-spacing="${wTracking}" fill="${a}"
+        text-anchor="middle" dominant-baseline="middle">${displayName}</text>
+    </svg>`,
+    // V2: Name left-aligned, thin accent rule underneath, on light
+    `<svg id="svg-wm-logotype" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${lc}"/>
+      <text x="52" y="78" font-family="${hF}" font-weight="${wWeight}"
+        font-size="52" letter-spacing="${wTracking}" fill="${p}"
+        text-anchor="start" dominant-baseline="middle">${displayName}</text>
+      <rect x="52" y="112" width="88" height="3" rx="1.5" fill="${a}"/>
+    </svg>`,
+  ];
 
-  // 3. Stacked — name + tagline, white bg
-  const stackedSvg = `
-    <svg id="svg-stacked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
-      <rect width="480" height="160" fill="#ffffff"/>
-      <line x1="60" y1="80" x2="420" y2="80" stroke="${a}" stroke-width="1" opacity="0.25"/>
-      <text x="240" y="62" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
+  // ── 2. DISPLAY — tight caps treatment ───────────────────────
+  const displayStr = displayName.toUpperCase();
+  const displayVariants = [
+    // V0: Tight all-caps, accent on dark
+    `<svg id="svg-wm-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${dc}"/>
+      <text x="240" y="82" font-family="${hF}" font-weight="900"
+        font-size="50" letter-spacing="0.14em" fill="${a}"
+        text-anchor="middle" dominant-baseline="middle">${displayStr}</text>
+    </svg>`,
+    // V1: All-caps on primary, light text, with thin top + bottom border rules
+    `<svg id="svg-wm-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${p}"/>
+      <line x1="40" y1="28" x2="440" y2="28" stroke="${tp}" stroke-width="1" opacity="0.25"/>
+      <line x1="40" y1="132" x2="440" y2="132" stroke="${tp}" stroke-width="1" opacity="0.25"/>
+      <text x="240" y="82" font-family="${hF}" font-weight="900"
+        font-size="50" letter-spacing="0.12em" fill="${tp}"
+        text-anchor="middle" dominant-baseline="middle">${displayStr}</text>
+    </svg>`,
+    // V2: Wide-tracked small caps on accent, with flanking decorative rules
+    `<svg id="svg-wm-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${a}"/>
+      <text x="240" y="82" font-family="${hF}" font-weight="700"
+        font-size="44" letter-spacing="0.18em" fill="${ta}"
+        text-anchor="middle" dominant-baseline="middle">${displayStr}</text>
+      <rect x="32" y="79" width="44" height="2" rx="1" fill="${ta}" opacity="0.35"/>
+      <rect x="404" y="79" width="44" height="2" rx="1" fill="${ta}" opacity="0.35"/>
+    </svg>`,
+  ];
+
+  // ── 3. LOCKUP — name + tagline ───────────────────────────────
+  const lockupVariants = [
+    // V0: Centred stack, name + rule + tagline
+    `<svg id="svg-wm-lockup" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${lc}"/>
+      <line x1="80" y1="82" x2="400" y2="82" stroke="${a}" stroke-width="1" opacity="0.3"/>
+      <text x="240" y="64" font-family="${hF}" font-weight="${wWeight}"
         font-size="38" letter-spacing="${wTracking}" fill="${p}"
         text-anchor="middle" dominant-baseline="middle">${displayName}</text>
-      <text x="240" y="100" font-family="Inter,system-ui,sans-serif" font-weight="400"
-        font-size="13" letter-spacing="0.08em" fill="${textOnBg('#ffffff')}" opacity="0.55"
-        text-anchor="middle" dominant-baseline="middle">${shortTag.toUpperCase()}</text>
-    </svg>`;
-
-  // 4. Marked — geometric shape + initials + name
-  const markedSvg = `
-    <svg id="svg-marked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <text x="240" y="101" font-family="Inter,system-ui,sans-serif" font-weight="500"
+        font-size="11" letter-spacing="0.09em" fill="${tl}" opacity="0.5"
+        text-anchor="middle" dominant-baseline="middle">${shortTag}</text>
+    </svg>`,
+    // V1: Left-aligned, name large, tagline indented below
+    `<svg id="svg-wm-lockup" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
       <rect width="480" height="160" fill="${lc}"/>
-      <rect x="48" y="40" width="80" height="80" rx="12" fill="${p}"/>
-      <text x="88" y="82" font-family="${hF.replace(/'/g,'')}" font-weight="900"
-        font-size="32" fill="${tp}" text-anchor="middle" dominant-baseline="middle">${initials}</text>
-      <text x="162" y="74" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
+      <rect x="52" y="38" width="3" height="84" rx="1.5" fill="${a}"/>
+      <text x="68" y="72" font-family="${hF}" font-weight="${wWeight}"
+        font-size="40" letter-spacing="${wTracking}" fill="${p}"
+        text-anchor="start" dominant-baseline="middle">${displayName}</text>
+      <text x="70" y="108" font-family="Inter,system-ui,sans-serif" font-weight="500"
+        font-size="11" letter-spacing="0.07em" fill="${tl}" opacity="0.45"
+        text-anchor="start" dominant-baseline="middle">${shortTag}</text>
+    </svg>`,
+    // V2: Name on dark, tagline in accent below
+    `<svg id="svg-wm-lockup" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${dc}"/>
+      <text x="240" y="65" font-family="${hF}" font-weight="${wWeight}"
+        font-size="40" letter-spacing="${wTracking}" fill="${td}"
+        text-anchor="middle" dominant-baseline="middle">${displayName}</text>
+      <text x="240" y="105" font-family="Inter,system-ui,sans-serif" font-weight="600"
+        font-size="11" letter-spacing="0.1em" fill="${a}"
+        text-anchor="middle" dominant-baseline="middle">${shortTag}</text>
+    </svg>`,
+  ];
+
+  // ── 4. MARKED — icon mark + wordmark ────────────────────────
+  const markShapes = [
+    // Square mark
+    (x, y, size) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${Math.round(size * 0.14)}" fill="${p}"/>
+      <text x="${x + size / 2}" y="${y + size / 2}" font-family="${hF}" font-weight="900"
+        font-size="${Math.round(size * 0.46)}" fill="${tp}" text-anchor="middle" dominant-baseline="middle">${initials}</text>`,
+    // Circle mark
+    (x, y, size) => `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2}" fill="${p}"/>
+      <text x="${x + size / 2}" y="${y + size / 2}" font-family="${hF}" font-weight="900"
+        font-size="${Math.round(size * 0.44)}" fill="${tp}" text-anchor="middle" dominant-baseline="middle">${initials}</text>`,
+    // Pill / wide badge
+    (x, y, size) => {
+      const w = Math.round(size * 1.4), h = size;
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="${a}"/>
+      <text x="${x + w / 2}" y="${y + h / 2}" font-family="${hF}" font-weight="900"
+        font-size="${Math.round(h * 0.46)}" fill="${ta}" text-anchor="middle" dominant-baseline="middle">${initials}</text>`;
+    },
+  ];
+
+  const mV = v.marked;
+  const shapeFn = markShapes[mV % markShapes.length];
+  const mSize = 72, mX = 44, mY = 44;
+  const shapeStr = shapeFn(mX, mY, mSize);
+  const mNameX = mV === 2 ? mX + Math.round(mSize * 1.4) + 16 : mX + mSize + 16;
+
+  const markedSvg = `<svg id="svg-wm-marked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${lc}"/>
+      ${shapeStr}
+      <text x="${mNameX}" y="${mY + 34}" font-family="${hF}" font-weight="${wWeight}"
         font-size="38" letter-spacing="${wTracking}" fill="${p}"
         text-anchor="start" dominant-baseline="middle">${displayName}</text>
-      <text x="163" y="107" font-family="Inter,system-ui,sans-serif" font-weight="500"
-        font-size="12" letter-spacing="0.09em" fill="${tl}" opacity="0.5"
-        text-anchor="start" dominant-baseline="middle">${shortTag || ''}</text>
+      <text x="${mNameX + 1}" y="${mY + 60}" font-family="Inter,system-ui,sans-serif" font-weight="500"
+        font-size="11" letter-spacing="0.07em" fill="${tl}" opacity="0.45"
+        text-anchor="start" dominant-baseline="middle">${shortTag.slice(0, 40)}</text>
     </svg>`;
+
+  const logotypeSvg = logotypeVariants[v.logotype % logotypeVariants.length];
+  const displaySvg  = displayVariants[v.display   % displayVariants.length];
+  const lockupSvg   = lockupVariants[v.lockup     % lockupVariants.length];
 
   return `
     <div class="wm-grid">
-      ${wmCard('logotype', 'Logotype', logotypeSvg, 'Heading font · natural case · standard tracking')}
-      ${wmCard('display',  'Display',  displaySvg,  'All caps · heavy weight · accent colour on dark')}
-      ${wmCard('stacked',  'Lockup',   stackedSvg,  'Name + tagline stacked · rule separator')}
-      ${wmCard('marked',   'Mark + Name', markedSvg, 'Geometric mark with initials + wordmark')}
+      ${wmCard('logotype', 'Logotype',    logotypeSvg, 'Wordmark only · heading font · three background styles')}
+      ${wmCard('display',  'Display',     displaySvg,  'All-caps treatment · heavy tracking · three colour schemes')}
+      ${wmCard('lockup',   'Lockup',      lockupSvg,   'Name + tagline · three layout structures')}
+      ${wmCard('marked',   'Mark + Name', markedSvg,   'Symbol mark with initials · square · circle · pill')}
     </div>
-    <p class="type-pairing-desc" style="margin-top:20px;">Wordmarks use <strong>${fonts.heading}</strong> — weight ${wWeight}, tracking ${wTracking}. Download each as PNG or copy the SVG source code from the browser inspector for vector use.</p>`;
+    <p class="type-pairing-desc" style="margin-top:20px;">Wordmarks use <strong>${fonts.heading}</strong> · weight ${wWeight} · tracking ${wTracking}. Hover each card to download the SVG or refresh the style variant.</p>`;
 }
 
-async function downloadWordmark(variantId) {
-  const svgEl = document.getElementById(`svg-${variantId}`);
+function regenWordmarkCard(cardId) {
+  if (!kit.palette || !kit.fonts || !kit.brandData) return;
+  const counts = { logotype: 3, display: 3, lockup: 3, marked: 3 };
+  const count  = counts[cardId] ?? 3;
+  const prev   = (kit.wordmarkVariants || {})[cardId] ?? 0;
+  let next = Math.floor(Math.random() * count);
+  if (next === prev && count > 1) next = (next + 1) % count;
+  if (!kit.wordmarkVariants) kit.wordmarkVariants = {};
+  kit.wordmarkVariants[cardId] = next;
+  kit.wordmark = generateWordmark({ ...kit.brandData, taglines: kit.taglines }, kit.fonts, kit.palette);
+  document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
+}
+
+function downloadWordmarkSvg(cardId) {
+  const svgEl = document.getElementById(`svg-wm-${cardId}`);
   if (!svgEl) return;
-  const svg = new XMLSerializer().serializeToString(svgEl);
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = `${(kit.brandData?.brandName || 'wordmark').replace(/\s+/g,'-').toLowerCase()}-${variantId}.svg`;
+  const svg   = new XMLSerializer().serializeToString(svgEl);
+  const blob  = new Blob([svg], { type: 'image/svg+xml' });
+  const url   = URL.createObjectURL(blob);
+  const brand = (kit.brandData?.brandName || 'wordmark').replace(/\s+/g, '-').toLowerCase();
+  const a     = Object.assign(document.createElement('a'), { href: url, download: `${brand}-${cardId}.svg` });
   a.click();
   URL.revokeObjectURL(url);
 }
+
+async function downloadWordmark(variantId) { downloadWordmarkSvg(variantId); }
 
 function mockupCell(frameClass, innerHtml, label, context, cellId) {
   return `
@@ -2236,10 +2353,10 @@ ${tokens}${extra}`;
    ───────────────────────────────────────────────────────────── */
 
 function renderStrategy(strategy) {
-  const pillars = strategy.pillars.map(p => `
+  const pillars = strategy.pillars.map((p, i) => `
     <div class="pillar-card">
       <div class="pillar-card-head">
-        <span class="pillar-emoji">${p.emoji}</span>
+        <span class="pillar-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
         <div>
           <div class="pillar-name">${p.name}</div>
           <span class="pillar-goal">${p.goal}</span>
@@ -2280,14 +2397,16 @@ function renderStrategy(strategy) {
    ───────────────────────────────────────────────────────────── */
 
 const kit = {
-  brandData:     null,
-  palette:       null,
-  fonts:         null,
-  voice:         null,
-  taglines:      [],
-  activeTagline: 0,
-  strategy:      null,
-  wordmark:      null,
+  brandData:       null,
+  palette:         null,
+  fonts:           null,
+  voice:           null,
+  taglines:        [],
+  activeTagline:   0,
+  strategy:        null,
+  wordmark:        null,
+  mockupVariants:  null,
+  wordmarkVariants: null,
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -2337,6 +2456,7 @@ function regenSection(section) {
       break;
     }
     case 'wordmark': {
+      kit.wordmarkVariants = null; // fresh random style variants
       kit.wordmark = generateWordmark({ ...bd, taglines: kit.taglines }, kit.fonts, kit.palette);
       document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
       break;
@@ -2431,7 +2551,8 @@ async function generateKit(brandData) {
 
   // Mockup + wordmark need fonts — short wait for load
   await document.fonts.ready;
-  kit.mockupVariants = null; // fresh random layouts on each full generation
+  kit.mockupVariants  = null; // fresh random layouts on each full generation
+  kit.wordmarkVariants = null;
   document.getElementById('mockup-content').innerHTML = renderMockup(
     kit.palette, kit.fonts, { ...brandData, taglines: kit.taglines }
   );
