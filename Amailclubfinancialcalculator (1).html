@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SEARCH / FOUND Mail Club Projector</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111827; color: #f9fafb; font-family: system-ui, sans-serif; padding: 16px; min-height: 100vh; }
+  h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.05em; border-bottom: 1px solid #374151; padding-bottom: 12px; margin-bottom: 20px; }
+  h1 span { color: #facc15; }
+  h2 { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #facc15; margin-bottom: 12px; }
+  h3 { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #d1d5db; margin-bottom: 12px; }
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .slider-row { margin-bottom: 14px; }
+  .slider-row label { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 600; color: #d1d5db; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .slider-row label span { color: #facc15; background: #111827; padding: 1px 8px; border-radius: 4px; font-family: monospace; }
+  input[type=range] { width: 100%; height: 4px; accent-color: #facc15; cursor: pointer; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stats2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 700px) { .stats, .stats2 { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; }
+  .stat .lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 4px; }
+  .stat .val { font-size: 1.2rem; font-weight: 800; font-family: monospace; }
+  .stat .sub { font-size: 0.6rem; color: #6b7280; margin-top: 2px; }
+  .green { color: #4ade80; } .yellow { color: #facc15; } .red { color: #f87171; } .purple { color: #a78bfa; } .blue { color: #60a5fa; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; border: none; background: #374151; color: #9ca3af; transition: all 0.15s; }
+  .tab.active { background: #facc15; color: #111827; }
+  .chart-wrap { position: relative; height: 280px; }
+  table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.68rem; }
+  th { text-align: right; padding: 5px 5px; color: #6b7280; border-bottom: 1px solid #374151; font-weight: 600; white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { text-align: right; padding: 5px 5px; border-bottom: 1px solid #1f2937; white-space: nowrap; }
+  td:first-child { text-align: left; color: #facc15; font-weight: 700; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .note { font-size: 0.62rem; color: #6b7280; margin-top: 4px; margin-bottom: 4px; line-height: 1.4; }
+  .section-divider { border-top: 1px solid #374151; margin: 12px 0 14px; }
+  .viral-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
+  .badge-low { background: #374151; color: #9ca3af; }
+  .badge-med { background: #92400e; color: #fcd34d; }
+  .badge-high { background: #064e3b; color: #4ade80; }
+  .bulk-indicator { font-size: 0.62rem; color: #60a5fa; margin-top: -10px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h1>SEARCH <span>/ FOUND</span> &nbsp;Mail Club Financial Projector — 12 Month Forecast</h1>
+<div class="layout">
+  <div class="controls">
+
+    <!-- LAUNCH MEMBERS -->
+    <div class="panel">
+      <h2>Launch Members</h2>
+      <div class="slider-row"><label>Tier 1 ($5) Subscribers <span id="v_t1">20</span></label><input type="range" id="t1" min="0" max="500" step="1" value="20"></div>
+      <div class="slider-row"><label>Tier 2 ($8) Subscribers <span id="v_t2">15</span></label><input type="range" id="t2" min="0" max="500" step="1" value="15"></div>
+      <div class="slider-row"><label>Tier 3 ($12) Subscribers <span id="v_t3">15</span></label><input type="range" id="t3" min="0" max="500" step="1" value="15"></div>
+    </div>
+
+    <!-- SOCIAL & CONVERSION -->
+    <div class="panel">
+      <h2>Social Media & Conversion</h2>
+      <div class="slider-row"><label>Current Followers <span id="v_fl">14000</span></label><input type="range" id="fl" min="1000" max="100000" step="500" value="14000"></div>
+      <div class="slider-row"><label>Monthly Follower Growth % <span id="v_fg">3%</span></label><input type="range" id="fg" min="0" max="20" step="0.5" value="3"></div>
+      <div class="slider-row"><label>Follower → Subscriber Rate <span id="v_cr">0.4%</span></label><input type="range" id="cr" min="0.1" max="5" step="0.1" value="0.4"></div>
+      <p class="note" id="conv_note">Est. new subs from social this month: —</p>
+      <div class="section-divider"></div>
+      <h2 style="margin-bottom:10px">Viral Moment Calculator</h2>
+      <div class="slider-row"><label>Posting Frequency / mo <span id="v_pf2">12</span></label><input type="range" id="pf2" min="1" max="60" step="1" value="12"></div>
+      <div class="slider-row"><label>Avg Content Quality Score <span id="v_cq">6</span></label><input type="range" id="cq" min="1" max="10" step="1" value="6"></div>
+      <div class="slider-row"><label>Community Engagement Score <span id="v_ce">7</span></label><input type="range" id="ce" min="1" max="10" step="1" value="7"></div>
+      <div class="slider-row"><label>Partnerships / Collabs / mo <span id="v_cp">1</span></label><input type="range" id="cp" min="0" max="10" step="1" value="1"></div>
+      <div style="display:flex;align-items:center;margin-top:4px;margin-bottom:8px;">
+        <span class="note" style="margin:0">Viral likelihood this month:</span>
+        <span class="viral-badge" id="viral_badge">—</span>
+      </div>
+      <p class="note" id="viral_note">—</p>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="panel">
+      <h2>Organic Growth Variables</h2>
+      <div class="slider-row"><label>Base Monthly Growth Rate <span id="v_gr">15%</span></label><input type="range" id="gr" min="0" max="50" step="1" value="15"></div>
+      <div class="slider-row"><label>Monthly Churn Rate <span id="v_ch">8%</span></label><input type="range" id="ch" min="0" max="30" step="1" value="8"></div>
+      <div class="slider-row"><label>New Sub % → Tier 1 <span id="v_s1">35%</span></label><input type="range" id="s1" min="5" max="80" step="5" value="35"></div>
+      <div class="slider-row"><label>New Sub % → Tier 2 <span id="v_s2">35%</span></label><input type="range" id="s2" min="5" max="80" step="5" value="35"></div>
+      <p class="note" id="s3note">Tier 3 gets remaining: 30%</p>
+    </div>
+
+    <!-- PER PACKAGE COSTS -->
+    <div class="panel">
+      <h2>Per-Package Costs</h2>
+      <div class="slider-row"><label>Print Cost <span id="v_pc">$1.50</span></label><input type="range" id="pc" min="0.25" max="5" step="0.25" value="1.50"></div>
+      <div class="slider-row"><label>Sticker Cost <span id="v_sc">$0.75</span></label><input type="range" id="sc" min="0.25" max="3" step="0.25" value="0.75"></div>
+      <div class="slider-row"><label>Newsletter Print <span id="v_nc">$0.50</span></label><input type="range" id="nc" min="0.25" max="2" step="0.25" value="0.50"></div>
+      <div class="slider-row"><label>Shipping <span id="v_sh">$2.50</span></label><input type="range" id="sh" min="1" max="6" step="0.25" value="2.50"></div>
+      <div class="slider-row"><label>Packaging <span id="v_pk">$0.75</span></label><input type="range" id="pk" min="0.25" max="3" step="0.25" value="0.75"></div>
+      <div class="slider-row"><label>Business Goodies <span id="v_bg">$1.00</span></label><input type="range" id="bg" min="0" max="5" step="0.25" value="1.00"></div>
+      <div class="section-divider"></div>
+      <h2 style="margin-bottom:10px">Bulk Discount Thresholds</h2>
+      <p class="note" style="margin-bottom:10px">Per-package costs drop automatically when subscriber count crosses these thresholds.</p>
+      <div class="slider-row"><label>Tier 1 Bulk Threshold <span id="v_bt1">50 subs</span></label><input type="range" id="bt1" min="10" max="300" step="10" value="50"></div>
+      <div class="slider-row"><label>Tier 1 Bulk Discount % <span id="v_bd1">10%</span></label><input type="range" id="bd1" min="0" max="40" step="5" value="10"></div>
+      <div class="slider-row"><label>Tier 2 Bulk Threshold <span id="v_bt2">100 subs</span></label><input type="range" id="bt2" min="25" max="500" step="25" value="100"></div>
+      <div class="slider-row"><label>Tier 2 Bulk Discount % <span id="v_bd2">20%</span></label><input type="range" id="bd2" min="0" max="40" step="5" value="20"></div>
+      <p class="bulk-indicator" id="bulk_status">—</p>
+    </div>
+
+    <!-- FIXED & OVERHEAD -->
+    <div class="panel">
+      <h2>Fixed & Overhead Costs</h2>
+      <div class="slider-row"><label>Artist Stipend / mo <span id="v_as">$75</span></label><input type="range" id="as" min="0" max="300" step="25" value="75"></div>
+      <div class="slider-row"><label>Misc Monthly Costs <span id="v_mc">$20</span></label><input type="range" id="mc" min="0" max="200" step="5" value="20"></div>
+      <div class="slider-row"><label>PO Box (per quarter) <span id="v_po">$21</span></label><input type="range" id="po" min="0" max="100" step="1" value="21"></div>
+      <p class="note" style="margin-bottom:10px">PO Box billed months 1, 4, 7, 10</p>
+      <div class="slider-row"><label>Patreon Fee % <span id="v_pat">8%</span></label><input type="range" id="pat" min="5" max="12" step="1" value="8"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right">
+    <div class="stats">
+      <div class="stat"><div class="lbl">Month 1 Subs</div><div class="val" id="s_m1subs">—</div><div class="sub" id="s_m1split">—</div></div>
+      <div class="stat"><div class="lbl">Month 12 Subs</div><div class="val yellow" id="s_m12subs">—</div><div class="sub" id="s_m12growth">—</div></div>
+      <div class="stat"><div class="lbl">12mo Net Revenue</div><div class="val green" id="s_rev">—</div><div class="sub">after Patreon fees</div></div>
+      <div class="stat"><div class="lbl">12mo Profit</div><div class="val" id="s_profit">—</div><div class="sub" id="s_margin">—</div></div>
+    </div>
+    <div class="stats2">
+      <div class="stat"><div class="lbl">Est. Year-End Followers</div><div class="val purple" id="s_followers">—</div><div class="sub" id="s_follower_growth">—</div></div>
+      <div class="stat"><div class="lbl">Social-Driven Subs</div><div class="val blue" id="s_social_subs">—</div><div class="sub">from follower conversion</div></div>
+      <div class="stat"><div class="lbl">Viral Moments Est.</div><div class="val yellow" id="s_viral">—</div><div class="sub">projected over 12mo</div></div>
+      <div class="stat"><div class="lbl">Bulk Savings</div><div class="val green" id="s_bulk_savings">—</div><div class="sub">vs flat rate costs</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('revenue',this)">Revenue</button>
+      <button class="tab" onclick="switchTab('subscribers',this)">Subscribers</button>
+      <button class="tab" onclick="switchTab('margin',this)">Margin</button>
+      <button class="tab" onclick="switchTab('social',this)">Social Growth</button>
+    </div>
+    <div class="panel">
+      <h3 id="chart_title">Revenue vs Costs vs Profit</h3>
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+    <div class="panel" style="overflow-x:auto">
+      <h3>Monthly Breakdown</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th><th>Subs</th><th>Followers</th><th>Soc.Subs</th>
+            <th>Gross</th><th>Net Rev</th><th>Var Cost</th><th>Fixed</th>
+            <th>PO Box</th><th>Total Cost</th><th>Profit</th><th>Margin</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS=["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+const PO_MONTHS=[0,3,6,9];
+let currentTab="revenue", chartInstance=null, currentData=[];
+
+function g(id){return document.getElementById(id);}
+function fmtD(v){return"$"+v.toFixed(2);}
+function fmtK(v){return v>=1000?"$"+(v/1000).toFixed(1)+"k":"$"+Math.round(v);}
+function fmtN(v){return v>=1000?(v/1000).toFixed(1)+"k":String(v);}
+
+function getVals(){
+  return{
+    t1:+g("t1").value, t2:+g("t2").value, t3:+g("t3").value,
+    fl:+g("fl").value, fg:+g("fg").value, cr:+g("cr").value,
+    pf2:+g("pf2").value, cq:+g("cq").value, ce:+g("ce").value, cp:+g("cp").value,
+    gr:+g("gr").value, ch:+g("ch").value,
+    s1:+g("s1").value, s2:+g("s2").value,
+    pc:+g("pc").value, sc:+g("sc").value, nc:+g("nc").value,
+    sh:+g("sh").value, pk:+g("pk").value, bg:+g("bg").value,
+    bt1:+g("bt1").value, bd1:+g("bd1").value,
+    bt2:+g("bt2").value, bd2:+g("bd2").value,
+    as:+g("as").value, mc:+g("mc").value, po:+g("po").value,
+    pat:+g("pat").value
+  };
+}
+
+function viralScore(v){
+  // Score 0-100 based on posting freq, quality, engagement, collabs
+  const freqScore = Math.min(v.pf2/30, 1) * 25;
+  const qualScore = (v.cq/10) * 30;
+  const engScore  = (v.ce/10) * 30;
+  const colScore  = Math.min(v.cp/5, 1) * 15;
+  return freqScore + qualScore + engScore + colScore;
+}
+
+function viralMomentChance(score){
+  // Returns monthly probability 0-1 of a viral moment
+  if(score < 30) return 0.03;
+  if(score < 50) return 0.07;
+  if(score < 70) return 0.14;
+  if(score < 85) return 0.22;
+  return 0.35;
+}
+
+function compute(){
+  const v = getVals();
+  let t1=v.t1, t2=v.t2, t3=v.t3;
+  let followers = v.fl;
+  const data=[];
+  const s3split = 100 - v.s1 - v.s2;
+  const vScore = viralScore(v);
+  const monthlyViralChance = viralMomentChance(vScore);
+  let totalBulkSavings = 0;
+  let totalSocialSubs = 0;
+
+  for(let i=0;i<12;i++){
+    const total = t1+t2+t3;
+
+    // Social-driven new subs this month
+    const socialNewSubs = Math.round(followers * (v.cr/100));
+    totalSocialSubs += socialNewSubs;
+
+    // Bulk discount logic
+    const bulkActive1 = total >= v.bt1;
+    const bulkActive2 = total >= v.bt2;
+    const discountMult1 = bulkActive1 ? (1 - v.bd1/100) : 1;
+    const discountMult2 = bulkActive2 ? (1 - v.bd2/100) : 1;
+    const activeMult = bulkActive2 ? discountMult2 : (bulkActive1 ? discountMult1 : 1);
+
+    // Revenue
+    const gross = (t1*5)+(t2*8)+(t3*12);
+    const patreonCut = gross*(v.pat/100);
+    const net = gross - patreonCut;
+
+    // Per-package base cost
+    const base = v.sh+v.pk+v.sc+v.nc+v.bg;
+    const c1 = base * activeMult;
+    const c2 = (base+v.pc) * activeMult;
+    const c3 = (base+2*v.pc) * activeMult;
+    const flatC1 = base, flatC2 = base+v.pc, flatC3 = base+2*v.pc;
+    const varC = (t1*c1)+(t2*c2)+(t3*c3);
+    const flatVarC = (t1*flatC1)+(t2*flatC2)+(t3*flatC3);
+    totalBulkSavings += flatVarC - varC;
+
+    const poThisMonth = PO_MONTHS.includes(i) ? v.po : 0;
+    const fixedC = v.as + v.mc;
+    const totalC = varC + fixedC + poThisMonth;
+    const profit = net - totalC;
+
+    // Viral moment this month (expected value)
+    const viralBoostSubs = Math.round(monthlyViralChance * total * 0.15);
+
+    data.push({
+      month:MONTHS[i], subscribers:total, t1,t2,t3,
+      followers:Math.round(followers),
+      socialSubs:socialNewSubs,
+      gross:+gross.toFixed(2), net:+net.toFixed(2),
+      varC:+varC.toFixed(2), fixedC:+fixedC.toFixed(2),
+      poBox:poThisMonth, totalCosts:+totalC.toFixed(2),
+      profit:+profit.toFixed(2),
+      margin: net>0 ? +((profit/net)*100).toFixed(1) : 0,
+      bulkActive: bulkActive1||bulkActive2,
+      viralChance: +(monthlyViralChance*100).toFixed(0)
+    });
+
+    // Grow followers
+    followers = Math.round(followers * (1 + v.fg/100));
+
+    // Grow subs: organic + social conversion + viral boost
+    const organicNew = Math.round(total*(v.gr/100));
+    const churned = Math.round(total*(v.ch/100));
+    const netNew = organicNew + socialNewSubs + viralBoostSubs - churned;
+    t1 = Math.max(0, Math.round(t1 + netNew*(v.s1/100)));
+    t2 = Math.max(0, Math.round(t2 + netNew*(v.s2/100)));
+    t3 = Math.max(0, Math.round(t3 + netNew*(s3split/100)));
+  }
+
+  // Estimated viral moments over 12mo (expected value)
+  const estViralMoments = +(monthlyViralChance * 12).toFixed(1);
+
+  return { months: data, estViralMoments, totalBulkSavings:+totalBulkSavings.toFixed(2), totalSocialSubs, finalFollowers: Math.round(followers) };
+}
+
+function updateLabels(){
+  const v=getVals();
+  g("v_t1").textContent=v.t1; g("v_t2").textContent=v.t2; g("v_t3").textContent=v.t3;
+  g("v_fl").textContent=fmtN(v.fl); g("v_fg").textContent=v.fg+"%"; g("v_cr").textContent=v.cr+"%";
+  g("v_pf2").textContent=v.pf2; g("v_cq").textContent=v.cq+"/10"; g("v_ce").textContent=v.ce+"/10"; g("v_cp").textContent=v.cp;
+  g("v_gr").textContent=v.gr+"%"; g("v_ch").textContent=v.ch+"%";
+  g("v_s1").textContent=v.s1+"%"; g("v_s2").textContent=v.s2+"%";
+  g("v_pc").textContent=fmtD(v.pc); g("v_sc").textContent=fmtD(v.sc); g("v_nc").textContent=fmtD(v.nc);
+  g("v_sh").textContent=fmtD(v.sh); g("v_pk").textContent=fmtD(v.pk); g("v_bg").textContent=fmtD(v.bg);
+  g("v_bt1").textContent=v.bt1+" subs"; g("v_bd1").textContent=v.bd1+"%";
+  g("v_bt2").textContent=v.bt2+" subs"; g("v_bd2").textContent=v.bd2+"%";
+  g("v_as").textContent="$"+v.as; g("v_mc").textContent="$"+v.mc;
+  g("v_po").textContent="$"+v.po; g("v_pat").textContent=v.pat+"%";
+  g("s3note").textContent="Tier 3 gets remaining: "+(100-v.s1-v.s2)+"%";
+
+  // Viral badge
+  const vScore = viralScore(v);
+  const chance = viralMomentChance(v) * 100;
+  const badge = g("viral_badge");
+  let label, cls;
+  if(vScore < 40){ label="Low"; cls="badge-low"; }
+  else if(vScore < 65){ label="Medium"; cls="badge-med"; }
+  else { label="High"; cls="badge-high"; }
+  badge.textContent=label+" ("+viralMomentChance(v)*100+"% / mo)";
+  badge.className="viral-badge "+cls;
+
+  const tips = [];
+  if(v.pf2 < 12) tips.push("post more often");
+  if(v.cq < 7) tips.push("raise content quality");
+  if(v.ce < 7) tips.push("boost community engagement");
+  if(v.cp < 2) tips.push("add more collabs");
+  g("viral_note").textContent = tips.length ? "To improve: "+tips.join(", ")+"." : "You're maximizing viral potential!";
+
+  // Social conversion note
+  const socialEst = Math.round(v.fl*(v.cr/100));
+  g("conv_note").textContent = "Est. new subs from social this month: "+socialEst;
+
+  // Bulk status
+  const currentTotal = +g("t1").value + +g("t2").value + +g("t3").value;
+  if(currentTotal >= v.bt2) g("bulk_status").textContent = "✓ Tier 2 bulk discount active ("+v.bd2+"% off per-package costs)";
+  else if(currentTotal >= v.bt1) g("bulk_status").textContent = "✓ Tier 1 bulk discount active ("+v.bd1+"% off per-package costs)";
+  else g("bulk_status").textContent = "No bulk discount yet — reach "+v.bt1+" total subs to unlock Tier 1";
+}
+
+function updateStats(result){
+  const data=result.months;
+  const f=data[0], l=data[data.length-1];
+  const tR=data.reduce((s,m)=>s+m.net,0);
+  const tP=data.reduce((s,m)=>s+m.profit,0);
+  g("s_m1subs").textContent=f.subscribers;
+  g("s_m1split").textContent=f.t1+"/"+f.t2+"/"+f.t3+" split";
+  g("s_m12subs").textContent=l.subscribers;
+  g("s_m12growth").textContent="+"+(l.subscribers-f.subscribers)+" growth";
+  g("s_rev").textContent=fmtK(tR);
+  const pe=g("s_profit"); pe.textContent=fmtK(tP); pe.className="val "+(tP>=0?"green":"red");
+  g("s_margin").textContent=tR>0?((tP/tR)*100).toFixed(0)+"% margin":"—";
+  g("s_followers").textContent=fmtN(result.finalFollowers);
+  g("s_follower_growth").textContent="from "+fmtN(+g("fl").value);
+  g("s_social_subs").textContent=result.totalSocialSubs;
+  g("s_viral").textContent=result.estViralMoments+" expected";
+  g("s_bulk_savings").textContent=fmtK(result.totalBulkSavings);
+}
+
+function updateTable(data){
+  const tb=g("tableBody"); tb.innerHTML="";
+  data.forEach(m=>{
+    const pc=m.profit>=0?"green":"red", mc=m.margin>=0?"green":"red";
+    const poCell=m.poBox>0?`<td class="yellow">$${m.poBox}</td>`:`<td style="color:#374151">—</td>`;
+    const bulkMark=m.bulkActive?` <span style="color:#60a5fa;font-size:0.6rem">●</span>`:"";
+    tb.innerHTML+=`<tr>
+      <td>${m.month}</td>
+      <td>${m.subscribers}${bulkMark}</td>
+      <td>${fmtN(m.followers)}</td>
+      <td class="blue">+${m.socialSubs}</td>
+      <td>$${m.gross.toFixed(0)}</td>
+      <td>$${m.net.toFixed(0)}</td>
+      <td class="red">$${m.varC.toFixed(0)}</td>
+      <td class="red">$${m.fixedC.toFixed(0)}</td>
+      ${poCell}
+      <td class="red">$${m.totalCosts.toFixed(0)}</td>
+      <td class="${pc}">$${m.profit.toFixed(0)}</td>
+      <td class="${mc}">${m.margin}%</td>
+    </tr>`;
+  });
+}
+
+function chartOpts(unit){
+  return{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#9ca3af",font:{size:11}}}},
+    scales:{
+      x:{grid:{color:"#374151"},ticks:{color:"#9ca3af",maxRotation:45}},
+      y:{grid:{color:"#374151"},ticks:{color:"#9ca3af",callback:v=>unit==="$"?"$"+v:unit==="%"?v+"%":v}}
+    }
+  };
+}
+
+function updateChart(data){
+  const ctx=g("mainChart").getContext("2d");
+  if(chartInstance)chartInstance.destroy();
+  const labels=data.map(m=>m.month);
+  if(currentTab==="revenue"){
+    g("chart_title").textContent="Revenue vs Costs vs Profit";
+    chartInstance=new Chart(ctx,{type:"line",data:{labels,datasets:[
+      {label:"Net Revenue",data:data.map(m=>m.net),borderColor:"#facc15",backgroundColor:"rgba(250,204,21,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#facc15"},
+      {label:"Total Costs",data:data.map(m=>m.totalCosts),borderColor:"#f87171",backgroundColor:"rgba(248,113,113,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#f87171"},
+      {label:"Profit",data:data.map(m=>m.profit),borderColor:"#4ade80",backgroundColor:"rgba(74,222,128,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#4ade80"}
+    ]},options:chartOpts("$")});
+  } else if(currentTab==="subscribers"){
+    g("chart_title").textContent="Subscriber Growth by Tier";
+    chartInstance=new Chart(ctx,{type:"bar",data:{labels,datasets:[
+      {label:"Tier 1 ($5)",data:data.map(m=>m.t1),backgroundColor:"#facc15"},
+      {label:"Tier 2 ($8)",data:data.map(m=>m.t2),backgroundColor:"#fb923c"},
+      {label:"Tier 3 ($12)",data:data.map(m=>m.t3),backgroundColor:"#4ade80"}
+    ]},options:{...chartOpts(""),scales:{x:{...chartOpts("").scales.x,stacked:true},y:{...chartOpts("").scales.y,stacked:true}}}});
+  } else if(currentTab==="margin"){
+    g("chart_title").textContent="Profit Margin % Over Time";
+    chartInstance=new Chart(ctx,{type:"line",data:{labels,datasets:[
+      {label:"Margin %",data:data.map(m=>m.margin),borderColor:"#a78bfa",backgroundColor:"rgba(167,139,250,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#a78bfa"}
+    ]},options:chartOpts("%")});
+  } else if(currentTab==="social"){
+    g("chart_title").textContent="Follower Growth & Social-Driven Subscribers";
+    chartInstance=new Chart(ctx,{type:"line",data:{labels,datasets:[
+      {label:"Followers",data:data.map(m=>m.followers),borderColor:"#a78bfa",backgroundColor:"rgba(167,139,250,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#a78bfa",yAxisID:"yF"},
+      {label:"Social Subs Added",data:data.map(m=>m.socialSubs),borderColor:"#60a5fa",backgroundColor:"rgba(96,165,250,0.08)",tension:0.3,pointRadius:3,pointBackgroundColor:"#60a5fa",yAxisID:"yS"}
+    ]},options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#9ca3af",font:{size:11}}}},
+      scales:{
+        x:{grid:{color:"#374151"},ticks:{color:"#9ca3af",maxRotation:45}},
+        yF:{grid:{color:"#374151"},ticks:{color:"#a78bfa"},position:"left",title:{display:true,text:"Followers",color:"#a78bfa"}},
+        yS:{grid:{color:"transparent"},ticks:{color:"#60a5fa"},position:"right",title:{display:true,text:"New Subs",color:"#60a5fa"}}
+      }
+    }});
+  }
+}
+
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll(".tab").forEach(e=>e.classList.remove("active"));
+  el.classList.add("active");
+  updateChart(currentData.months);
+}
+
+function update(){
+  updateLabels();
+  const result=compute();
+  currentData=result;
+  updateStats(result);
+  updateTable(result.months);
+  updateChart(result.months);
+}
+
+document.querySelectorAll("input[type=range]").forEach(el=>el.addEventListener("input",update));
+update();
+</script>
+</body>
+</html>

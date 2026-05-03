@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Breach Notification Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f3ee;
+    --paper: #f0ede6;
+    --ink: #1a1a1a;
+    --muted: #6b6560;
+    --rule: #c8c3bb;
+    --red: #8b1a1a;
+    --red-light: #c0392b;
+    --amber: #92600a;
+    --amber-bg: #fef3d0;
+    --stamp-red: #a32d2d;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: #1c1c1c;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--ink);
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: #111;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: #444;
+    text-transform: uppercase;
+  }
+
+  .topbar-system {
+    font-size: 11px;
+    color: #333;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── NOTIFICATION BUTTON ── */
+  .notif-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pending-counter {
+    text-align: right;
+  }
+
+  .pending-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: #444;
+    text-transform: uppercase;
+    display: block;
+  }
+
+  .pending-count {
+    font-size: 13px;
+    color: #c0392b;
+    letter-spacing: 0.06em;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .notif-btn {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #2a0808 0%, #1a0404 100%);
+    border: 1.5px solid #5a1a1a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.08s, box-shadow 0.08s;
+    box-shadow: 0 3px 0 #0a0000, 0 4px 8px rgba(0,0,0,0.6);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .notif-btn:hover {
+    background: linear-gradient(180deg, #3a0a0a 0%, #220505 100%);
+    border-color: #7a2a2a;
+  }
+
+  .notif-btn:active, .notif-btn.pressed {
+    transform: translateY(3px);
+    box-shadow: 0 0px 0 #0a0000, 0 1px 4px rgba(0,0,0,0.6);
+  }
+
+  .notif-btn-inner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #c0392b, #8b1a1a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .notif-pulse {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid rgba(192, 57, 43, 0.4);
+    animation: pulse 2s ease-out infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  .notif-btn-icon {
+    width: 14px;
+    height: 14px;
+    position: relative;
+  }
+
+  .notif-btn-icon::before {
+    content: '';
+    position: absolute;
+    top: 1px; left: 2px;
+    width: 10px; height: 9px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .notif-btn-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 5px; height: 3px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+  }
+
+  .notif-btn-icon .notif-bell-top {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  /* ── LETTER ── */
+  .letter-wrap {
+    background: var(--paper);
+    border: 1px solid #d4cfc7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.3);
+    position: relative;
+    min-height: 520px;
+  }
+
+  /* left margin rule */
+  .letter-wrap::before {
+    content: '';
+    position: absolute;
+    left: 72px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(200, 150, 150, 0.25);
+  }
+
+  .letter-inner {
+    padding: 3rem 3rem 3rem 5rem;
+  }
+
+  /* ── LETTERHEAD ── */
+  .letterhead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+  }
+
+  .seal-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .seal {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    position: relative;
+    color: var(--ink);
+  }
+
+  .seal::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    opacity: 0.4;
+  }
+
+  .agency-name {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  .agency-sub {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .ref-block {
+    text-align: right;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  /* ── STAMP ── */
+  .stamp {
+    position: absolute;
+    top: 0.5rem;
+    right: 0;
+    border: 2.5px solid var(--stamp-red);
+    color: var(--stamp-red);
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    transform: rotate(-8deg);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .stamp.show { opacity: 0.65; }
+
+  /* ── LETTER BODY ── */
+  .letter-salutation {
+    font-size: 12px;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    letter-spacing: 0.03em;
+  }
+
+  .letter-body {
+    font-size: 12.5px;
+    line-height: 2;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+    min-height: 280px;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background: var(--ink);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: blink 0.6s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── REDACTION ── */
+  .redacted {
+    background: var(--ink);
+    color: transparent;
+    cursor: pointer;
+    border-radius: 1px;
+    padding: 0 3px;
+    display: inline;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+    position: relative;
+  }
+
+  .redacted:hover {
+    background: #2a2a2a;
+    color: transparent;
+  }
+
+  .redacted.revealed {
+    background: var(--amber-bg);
+    color: var(--amber);
+    cursor: default;
+    border-bottom: 1px solid rgba(146, 96, 10, 0.3);
+  }
+
+  /* ── FOOTER ACTIONS ── */
+  .letter-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .reveal-all-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.4s, color 0.15s;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .reveal-all-btn:hover { color: var(--ink); }
+  .reveal-all-btn.show { opacity: 1; }
+
+  .footer-ref {
+    font-size: 9px;
+    color: var(--rule);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    background: #111;
+    border-top: 1px solid #1e1e1e;
+    padding: 6px 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .status-dot.active {
+    background: #c0392b;
+    animation: pulse 1.5s ease-out infinite;
+  }
+
+  .status-text {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: #333;
+    text-transform: uppercase;
+  }
+
+  .status-text span { color: #555; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-label">Federal Data Incident Notification System</div>
+    <div class="topbar-system">FDINS v4.2.1 — UNCLASSIFIED // FOR AFFECTED INDIVIDUAL USE</div>
+  </div>
+  <div class="notif-wrap">
+    <div class="pending-counter">
+      <span class="pending-label">Pending notices</span>
+      <span class="pending-count" id="pending-count">2,847,391</span>
+    </div>
+    <button class="notif-btn" id="notif-btn" onclick="handlePress()" title="Acknowledge and generate next notice">
+      <div class="notif-btn-inner">
+        <div class="notif-pulse"></div>
+        <div class="notif-btn-icon">
+          <div class="notif-bell-top"></div>
+        </div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="letter-wrap">
+    <div class="letter-inner">
+      <div class="letterhead">
+        <div class="seal-wrap">
+          <div class="seal">USDAO</div>
+          <div>
+            <div class="agency-name">U.S. Department of<br>Administrative Oversight</div>
+            <div class="agency-sub">Office of Data Custodianship & Incident Disclosure</div>
+          </div>
+        </div>
+        <div class="ref-block" id="ref-block">
+          REF: —<br>
+          —<br>
+          CLASSIFICATION: UNCLASSIFIED
+        </div>
+        <div class="stamp" id="stamp">Disclosed</div>
+      </div>
+
+      <div class="letter-salutation">Dear Affected Individual,</div>
+      <div class="letter-body" id="letter-body"><span class="cursor" id="cursor"></span></div>
+
+      <div class="letter-footer">
+        <button class="reveal-all-btn" id="reveal-btn" onclick="revealAll()">Reveal all redactions</button>
+        <div class="footer-ref" id="footer-ref"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div>
+    <span class="status-dot" id="status-dot"></span>
+    <span class="status-text" id="status-text">Awaiting acknowledgment</span>
+  </div>
+  <div class="status-text"><span id="notices-processed">0</span> notices processed this session</div>
+</div>
+
+<script>
+/* ── MINI TRACERY ENGINE ── */
+const tracery = {
+  flatten(grammar, rule) {
+    let text = Array.isArray(grammar[rule])
+      ? grammar[rule][Math.floor(Math.random() * grammar[rule].length)]
+      : grammar[rule] || rule;
+    return text.replace(/#(\w+)#/g, (_, r) => this.flatten(grammar, r));
+  }
+};
+
+/* ── GRAMMAR ── */
+const grammar = {
+  origin: [
+    "a password that was just the word 'password' followed by a period to satisfy complexity requirements",
+    "the one employee who understood the system retired in 2011 and cannot be reached",
+    "a vendor who described their security posture as vibes-based",
+    "a USB drive found in the parking lot that someone plugged in to see whose it was",
+    "a Zoom background that accidentally revealed a whiteboard containing production credentials",
+    "a security audit that identified 47 critical vulnerabilities, which was filed and never opened again",
+    "the firewall that was turned off just for the weekend in 2018",
+    "a chatbot trained on internal documents that was made publicly accessible to improve citizen services",
+    "Mercury being in retrograde during the scheduled patch window",
+    "a raccoon that chewed through a server room cable triggering a failover to the unencrypted backup",
+    "a system that failed its last three security audits but passed the fourth because the auditor was also the system owner",
+    "someone printing sensitive records and recycling them in the bin labeled regular recycling not the shredding one",
+    "a cybersecurity budget that was reallocated to buy the director a standing desk"
+  ],
+  actor: [
+    "a 14-year-old in another country who described the intrusion as pretty easy actually",
+    "someone who guessed correctly on the third try",
+    "a bot that was just kind of poking around",
+    "an intern who has since received a full-time offer",
+    "a nation-state actor who also maintains a surprisingly popular cooking blog",
+    "a person who submitted a FOIA request and received considerably more than requested",
+    "a security researcher who attempted to report the vulnerability and was asked to allow 90 days for a response",
+    "a foreign intelligence service and also, separately, a different foreign intelligence service, simultaneously, who appear to have been unaware of each other",
+    "an entity we are not at liberty to name at this time or any future time",
+    "ourselves, in a manner of speaking"
+  ],
+  data: [
+    "information sufficient to become you",
+    "your responses to every security question you have ever answered, including the name of your first pet",
+    "a photograph of your face taken at a DMV in 2009 that you have always hated",
+    "records that in combination paint a more complete picture of you than you have of yourself",
+    "your entire file, plus a secondary file whose existence we were previously unaware of",
+    "your medical history, financial records, and a surprisingly detailed log of your lunch habits",
+    "a scan of a form you filled out by hand, subsequently processed by OCR software trained on a different language",
+    "your security clearance application, including the section about personal vulnerabilities a foreign power could exploit"
+  ],
+  remedy: [
+    "this letter",
+    "one free year of credit monitoring through a vendor currently under FTC investigation",
+    "a PDF",
+    "the opportunity to feel heard by completing a short survey about this notification",
+    "a dedicated hotline staffed Tuesday through Thursday, 10am to 2pm, excluding all federal holidays",
+    "the knowledge that you are not alone, as approximately 21 million others received this letter",
+    "a new Social Security number, which you may apply for at a Social Security Administration office during normal business hours with two forms of ID",
+    "the sincere regret of the agency, which has no legal significance",
+    "the assurance that lessons have been learned",
+    "nothing at this time, pending appropriations"
+  ],
+  duration: [
+    "a window we are still working to characterize",
+    "approximately 14 months prior to detection",
+    "a timeframe that predates our current logging infrastructure",
+    "no fewer than 60 days",
+    "an indeterminate period during which nothing seemed unusual",
+    "longer than we are comfortable specifying in writing"
+  ],
+  signatory: [
+    "Director, Office of Incidents We Are Required to Tell You About",
+    "Deputy Assistant Secretary for Notification Compliance",
+    "Chief Information Security Officer (Acting) (Interim) (Temporary)",
+    "Senior Advisor, Breach Remediation and Public Affairs",
+    "GS-7 Data Systems Analyst, covering while the director is on leave",
+    "The Department, collectively"
+  ]
+};
+
+/* ── SEGMENT BUILDER ──
+   Each segment is either plain text or a redactable node.
+   We build the notice from parts so we know exactly which spans are redactable.
+*/
+function buildSegments() {
+  const origin   = tracery.flatten(grammar, 'origin');
+  const actor    = tracery.flatten(grammar, 'actor');
+  const data     = tracery.flatten(grammar, 'data');
+  const duration = tracery.flatten(grammar, 'duration');
+  const remedy   = tracery.flatten(grammar, 'remedy');
+  const sign     = tracery.flatten(grammar, 'signatory');
+
+  return [
+    { text: "This notice is issued pursuant to OMB Memorandum M-17-12. You are receiving this communication because ", plain: true },
+    { text: data, label: "AFFECTED DATA", plain: false },
+    { text: " may have been accessed without authorization.\n\n", plain: true },
+    { text: "The incident occurred over ", plain: true },
+    { text: duration, label: "TIMEFRAME", plain: false },
+    { text: ", as the direct result of ", plain: true },
+    { text: origin, label: "ROOT CAUSE", plain: false },
+    { text: ". The unauthorized access was carried out by ", plain: true },
+    { text: actor, label: "RESPONSIBLE PARTY", plain: false },
+    { text: ".\n\n", plain: true },
+    { text: "The agency takes this matter with the seriousness it warrants. In response, we are pleased to offer ", plain: true },
+    { text: remedy, label: "REMEDY", plain: false },
+    { text: ".\n\n", plain: true },
+    { text: "Please be assured that steps are being taken.\n\nSincerely,\n\n", plain: true },
+    { text: sign, label: "SIGNATORY", plain: false },
+    { text: "\nU.S. Department of Administrative Oversight", plain: true }
+  ];
+}
+
+/* ── REF GENERATOR ── */
+function makeRef() {
+  const agencies = ["OPM","HHS","DHS","DOJ","VA","IRS","DOD","CMS","GSA","SSA"];
+  const a = agencies[Math.floor(Math.random() * agencies.length)];
+  const y = 2024 + Math.floor(Math.random() * 7);
+  const n = String(Math.floor(Math.random() * 90000) + 10000);
+  return { code: `${a}-${y}-INC-${n}`, agency: a };
+}
+
+/* ── STATE ── */
+let typing = false;
+let abortTyping = false;
+let pendingCount = 2847391;
+let processedCount = 0;
+
+/* ── TYPEWRITER ── */
+let revealedIndices = new Set();
+
+function renderHTML(segments, charIndex) {
+  let html = '';
+  let pos = 0;
+  for (let i = 0; i < segments.length; i++) {
+    const s = segments[i];
+    const dt = s.plain ? s.text : `[${s.label}]`;
+    const available = Math.max(0, charIndex - pos);
+    const chunk = dt.slice(0, available);
+    if (!chunk) break;
+
+    if (s.plain) {
+      html += chunk.replace(/\n/g, '<br>');
+    } else {
+      const done = chunk.length === dt.length;
+      if (revealedIndices.has(i)) {
+        html += `<span class="redacted revealed" data-idx="${i}">${s.text}</span>`;
+      } else if (done) {
+        html += `<span class="redacted" data-idx="${i}" onclick="revealByIdx(${i})" title="Click to reveal">${s.text}</span>`;
+      } else {
+        html += `<span style="color:var(--muted)">${chunk}</span>`;
+      }
+    }
+    pos += dt.length;
+    if (pos >= charIndex) break;
+  }
+  return html;
+}
+
+async function typeSegments(segments) {
+  revealedIndices = new Set();
+  const body = document.getElementById('letter-body');
+  body.innerHTML = '<span class="cursor" id="cursor"></span>';
+  let charIndex = 0;
+
+  for (let si = 0; si < segments.length; si++) {
+    const seg = segments[si];
+    const display = seg.plain ? seg.text : `[${seg.label}]`;
+
+    for (let ci = 0; ci < display.length; ci++) {
+      if (abortTyping) return;
+      charIndex++;
+      body.innerHTML = renderHTML(segments, charIndex) + '<span class="cursor" id="cursor"></span>';
+
+      const delay = seg.plain
+        ? (display[ci] === '\n' ? 120 : 22 + Math.random() * 28)
+        : 12 + Math.random() * 10;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+function revealByIdx(idx) {
+  revealedIndices.add(idx);
+  const el = document.querySelector(`.redacted[data-idx="${idx}"]`);
+  if (el) { el.classList.add('revealed'); el.onclick = null; }
+}
+
+function revealAll() {
+  document.querySelectorAll('.redacted:not(.revealed)').forEach(el => {
+    const idx = el.getAttribute('data-idx');
+    if (idx !== null) revealedIndices.add(Number(idx));
+    el.classList.add('revealed');
+    el.onclick = null;
+  });
+}
+
+/* ── GENERATE ── */
+async function generate() {
+  if (typing) {
+    abortTyping = true;
+    await new Promise(r => setTimeout(r, 60));
+  }
+  abortTyping = false;
+  typing = true;
+
+  document.getElementById('stamp').classList.remove('show');
+  document.getElementById('reveal-btn').classList.remove('show');
+  document.getElementById('status-dot').classList.add('active');
+  document.getElementById('status-text').textContent = 'Transmitting notice...';
+
+  const ref = makeRef();
+  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('ref-block').innerHTML =
+    `REF: ${ref.code}<br>${today}<br>CLASSIFICATION: UNCLASSIFIED`;
+  document.getElementById('footer-ref').textContent = ref.code;
+
+  const segments = buildSegments();
+  await typeSegments(segments);
+
+  if (!abortTyping) {
+    document.getElementById('stamp').classList.add('show');
+    document.getElementById('reveal-btn').classList.add('show');
+    document.getElementById('status-dot').classList.remove('active');
+    document.getElementById('status-text').textContent = 'Notice delivered — acknowledgment pending';
+  }
+
+  typing = false;
+}
+
+/* ── BUTTON PRESS ── */
+function handlePress() {
+  const btn = document.getElementById('notif-btn');
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 120);
+
+  // tick down pending count by random amount
+  const decrement = Math.floor(Math.random() * 3) + 1;
+  pendingCount = Math.max(0, pendingCount - decrement);
+  document.getElementById('pending-count').textContent = pendingCount.toLocaleString();
+
+  processedCount++;
+  document.getElementById('notices-processed').textContent = processedCount;
+
+  generate();
+}
+
+/* ── INIT ── */
+generate();
+</script>
+</body>
+</html>
