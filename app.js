@@ -626,18 +626,16 @@ function generatePaletteFromIndustry(industry, toneWords, guidance = '', archety
 
 function assemblePalette(primary, secondary, accent, brandData) {
   const { h: pH, s: pS } = hexToHsl(primary);
-  // Neutrals carry a whisper of the brand hue
-  const neutral    = hslToHex(pH, Math.min(pS, 12), 32);
-  const lightColor = hslToHex(pH, Math.min(pS, 14), 96);
-  const darkColor  = hslToHex(pH, Math.min(pS, 18), 11);
+  // Off-white and near-black are kept almost neutral — barely a whisper of brand hue
+  const lightColor = hslToHex(pH, Math.min(pS, 4), 97);
+  const darkColor  = hslToHex(pH, Math.min(pS, 5), 10);
 
   return {
     primary:   { hex: primary,     role: 'Primary',   usage: 'Core brand identity — logos, headers, key UI elements' },
-    secondary: { hex: secondary,   role: 'Secondary',  usage: 'Supporting color — cards, section backgrounds, icons' },
-    accent:    { hex: accent,      role: 'Accent',     usage: 'CTAs, links, highlights — 10% rule, never as a background fill' },
-    neutral:   { hex: neutral,     role: 'Neutral',    usage: 'Body text, borders, dividers' },
-    light:     { hex: lightColor,  role: 'Light',      usage: 'Page backgrounds, negative space, breathing room' },
-    dark:      { hex: darkColor,   role: 'Dark',       usage: 'Dark mode, strong emphasis, dramatic moments' },
+    secondary: { hex: secondary,   role: 'Secondary',  usage: 'Supporting colour — cards, section backgrounds, icons' },
+    accent:    { hex: accent,      role: 'Accent',     usage: 'CTAs, links, highlights — use sparingly, never as a full background' },
+    light:     { hex: lightColor,  role: 'Off-white',  usage: 'Page and card backgrounds — your dominant surface (60%)' },
+    dark:      { hex: darkColor,   role: 'Near-black', usage: 'Body text, headings, dark mode surfaces' },
   };
 }
 
@@ -969,7 +967,10 @@ function generateContentStrategy(brandData, guidance = '') {
    ───────────────────────────────────────────────────────────── */
 
 function renderPalette(palette) {
-  const swatches = Object.entries(palette).map(([key, { hex, role, usage }]) => {
+  const brandKeys = ['primary', 'secondary', 'accent'];
+  const utilKeys  = ['light', 'dark'];
+
+  function swatch(key, { hex, role, usage }) {
     const fg = textOnBg(hex);
     return `
       <div class="swatch">
@@ -984,15 +985,21 @@ function renderPalette(palette) {
           <div class="swatch-usage">${usage}</div>
         </div>
       </div>`;
-  }).join('');
+  }
 
-  const cr = contrastRatio(palette.neutral.hex, palette.light.hex).toFixed(1);
+  const brandSwatches = brandKeys.map(k => swatch(k, palette[k])).join('');
+  const utilSwatches  = utilKeys.map(k  => swatch(k, palette[k])).join('');
+
+  const cr = contrastRatio(palette.dark.hex, palette.light.hex).toFixed(1);
 
   return `
-    <div class="palette-swatches">${swatches}</div>
+    <div class="palette-brand-label">Brand colours</div>
+    <div class="palette-swatches palette-swatches--brand">${brandSwatches}</div>
+    <div class="palette-brand-label palette-brand-label--util">Black &amp; white</div>
+    <div class="palette-swatches palette-swatches--util">${utilSwatches}</div>
     <div class="palette-note">
-      <strong>60-30-10 rule:</strong> Light (${palette.light.hex}) fills 60% of surfaces. Primary + Secondary carry 30%. Accent (${palette.accent.hex.toUpperCase()}) is reserved for calls-to-action and links only — never as a background fill.
-      Body text (${palette.neutral.hex.toUpperCase()}) on light background passes WCAG AA at ${cr}:1 contrast.
+      <strong>60–30–10:</strong> Off-white fills 60% of surfaces. Primary + Secondary carry 30%. Accent is reserved for CTAs and links — never as a solid background fill.
+      Near-black on off-white achieves ${cr}:1 contrast (WCAG AA).
       <span class="palette-picker-hint">Click any swatch to adjust its colour.</span>
     </div>`;
 }
@@ -1390,6 +1397,47 @@ function downloadWordmarkSvg(cardId) {
 
 async function downloadWordmark(variantId) { downloadWordmarkSvg(variantId); }
 
+/* ─────────────────────────────────────────────────────────────
+   16b. MOCKUP — INDUSTRY BIAS + COPY TABLES
+   ───────────────────────────────────────────────────────────── */
+
+// card 0=split 1=dark-editorial 2=light-stripe
+// profile 0=light-circle 1=primary-circle
+// feed 0=primary-area 1=editorial-quote 2=minimal-light
+// story 0=dark-swipeup 1=primary-pill
+// hero 0=dark-split 1=centred-light 2=accent-fill
+// email 0=secondary-cols 1=dark-stripe
+const MOCKUP_INDUSTRY_BIAS = {
+  'technology':              { card: 1, profile: 1, feed: 1, story: 0, hero: 0, email: 1 },
+  'food & beverage':         { card: 0, profile: 0, feed: 0, story: 1, hero: 1, email: 0 },
+  'health & wellness':       { card: 2, profile: 0, feed: 2, story: 1, hero: 1, email: 0 },
+  'fashion & beauty':        { card: 1, profile: 1, feed: 1, story: 1, hero: 2, email: 0 },
+  'finance':                 { card: 2, profile: 1, feed: 2, story: 0, hero: 0, email: 1 },
+  'education':               { card: 2, profile: 0, feed: 2, story: 0, hero: 1, email: 0 },
+  'creative & arts':         { card: 1, profile: 0, feed: 1, story: 1, hero: 2, email: 0 },
+  'retail & e-commerce':     { card: 0, profile: 0, feed: 0, story: 1, hero: 1, email: 0 },
+  'professional-services':   { card: 2, profile: 1, feed: 2, story: 0, hero: 0, email: 1 },
+  'real-estate':             { card: 2, profile: 0, feed: 0, story: 0, hero: 1, email: 0 },
+  'travel & hospitality':    { card: 0, profile: 0, feed: 1, story: 1, hero: 2, email: 0 },
+  'nonprofit':               { card: 0, profile: 0, feed: 2, story: 1, hero: 1, email: 0 },
+};
+
+const MOCKUP_COPY = {
+  'technology':            { cta1: 'Start free trial',  cta2: 'See how it works', cta3: 'Watch demo',       subscribe: 'Get product updates',  story_cta: 'See how it works' },
+  'food & beverage':       { cta1: 'Book a table',      cta2: 'View menu',        cta3: 'Order online',     subscribe: 'Get weekly specials',   story_cta: 'Order now' },
+  'health & wellness':     { cta1: 'Book a session',    cta2: 'See plans',        cta3: 'Start today',      subscribe: 'Get wellness tips',     story_cta: 'Learn more' },
+  'fashion & beauty':      { cta1: 'Shop the collection',cta2:'See lookbook',     cta3: 'Explore now',      subscribe: 'Get new arrivals',      story_cta: 'Shop now' },
+  'finance':               { cta1: 'Get started',       cta2: 'Request a demo',   cta3: 'Learn more',       subscribe: 'Get market insights',   story_cta: 'Learn more' },
+  'education':             { cta1: 'Start learning',    cta2: 'See courses',      cta3: 'Join free',        subscribe: 'Get study resources',   story_cta: 'Enrol today' },
+  'creative & arts':       { cta1: 'View portfolio',    cta2: 'Work with us',     cta3: 'See projects',     subscribe: 'Get creative updates',  story_cta: 'See our work' },
+  'retail & e-commerce':   { cta1: 'Shop now',          cta2: 'View collection',  cta3: 'Explore',          subscribe: 'Get exclusive deals',   story_cta: 'Shop now' },
+  'professional-services': { cta1: 'Request a consult', cta2: 'See our work',     cta3: 'Learn more',       subscribe: 'Get industry insights', story_cta: 'Get in touch' },
+  'real-estate':           { cta1: 'Book a viewing',    cta2: 'See listings',     cta3: 'Explore',          subscribe: 'Get new listings',      story_cta: 'View property' },
+  'travel & hospitality':  { cta1: 'Book now',          cta2: 'Explore',          cta3: 'Plan your trip',   subscribe: 'Get travel inspiration',story_cta: 'Book now' },
+  'nonprofit':             { cta1: 'Get involved',      cta2: 'Learn more',       cta3: 'Donate',           subscribe: 'Stay connected',        story_cta: 'Join us' },
+};
+const DEFAULT_COPY = { cta1: 'Get started', cta2: 'Learn more', cta3: 'Explore', subscribe: 'Subscribe', story_cta: 'Learn more' };
+
 function mockupCell(frameClass, innerHtml, label, context, cellId) {
   return `
     <div class="mockup-cell" id="mockup-cell-${cellId}">
@@ -1410,7 +1458,7 @@ function mockupCell(frameClass, innerHtml, label, context, cellId) {
 }
 
 function renderMockup(palette, fonts, brandData) {
-  const { brandName, taglines = [] } = brandData;
+  const { brandName, taglines = [], industry = '' } = brandData;
   const taglineText = (taglines[0]?.text || brandName).replace(/"/g, '');
   const shortTag    = taglineText.length > 45 ? taglineText.slice(0, 45) + '…' : taglineText;
   const p  = palette.primary.hex;
@@ -1418,14 +1466,20 @@ function renderMockup(palette, fonts, brandData) {
   const a  = palette.accent.hex;
   const lc = palette.light.hex;
   const dc = palette.dark.hex;
-  // Persist variant indices across live-updates; only reset on full regen
-  const pv = kit.mockupVariants || {};
-  const vCard    = pv.card    ?? Math.floor(Math.random() * 3);
-  const vProfile = pv.profile ?? Math.floor(Math.random() * 2);
-  const vFeed    = pv.feed    ?? Math.floor(Math.random() * 3);
-  const vStory   = pv.story   ?? Math.floor(Math.random() * 2);
-  const vHero    = pv.hero    ?? Math.floor(Math.random() * 3);
-  const vEmail   = pv.email   ?? Math.floor(Math.random() * 2);
+
+  // Industry-specific copy
+  const copy = MOCKUP_COPY[industry] || DEFAULT_COPY;
+
+  // Variant selection: use industry bias on fresh generation, persist across live-updates
+  const pv   = kit.mockupVariants || {};
+  const bias = MOCKUP_INDUSTRY_BIAS[industry] || {};
+  const fresh = Object.keys(pv).length === 0;
+  const vCard    = pv.card    ?? (fresh ? (bias.card    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vProfile = pv.profile ?? (fresh ? (bias.profile ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
+  const vFeed    = pv.feed    ?? (fresh ? (bias.feed    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vStory   = pv.story   ?? (fresh ? (bias.story   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
+  const vHero    = pv.hero    ?? (fresh ? (bias.hero    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vEmail   = pv.email   ?? (fresh ? (bias.email   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
   kit.mockupVariants = { card: vCard, profile: vProfile, feed: vFeed, story: vStory, hero: vHero, email: vEmail };
   const tp = textOnBg(p);
   const ts = textOnBg(s);
@@ -1518,7 +1572,7 @@ function renderMockup(palette, fonts, brandData) {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4% 7% 6%;">
         <div style="font-family:${bF};font-size:clamp(0.4em,0.95vw,0.55em);color:${tl};opacity:0.45;">${handle}</div>
-        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.5em);font-weight:700;padding:3% 8%;border-radius:3px;">Follow</div>
+        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.5em);font-weight:700;padding:3% 8%;border-radius:3px;">${copy.cta1}</div>
       </div>
     </div>`,
     // V1: Editorial quote style — dark bg, large quote marks
@@ -1558,7 +1612,7 @@ function renderMockup(palette, fonts, brandData) {
         <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.9em,2.8vw,1.5em);color:${td};line-height:1.2;letter-spacing:-0.015em;">${shortTag}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;padding-bottom:9%;gap:4%;">
-        <div style="font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};">Swipe up ↑</div>
+        <div style="font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};">${copy.story_cta} ↑</div>
       </div>
     </div>`,
     // V1: Primary colour fill, bold centred layout
@@ -1574,7 +1628,7 @@ function renderMockup(palette, fonts, brandData) {
         <div style="width:36px;height:2px;background:${tp};opacity:0.35;margin-top:10%;"></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;padding-bottom:9%;">
-        <div style="background:${lc};color:${tl};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:3% 10%;border-radius:20px;letter-spacing:0.05em;">Learn more →</div>
+        <div style="background:${lc};color:${tl};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:3% 10%;border-radius:20px;letter-spacing:0.05em;">${copy.story_cta} →</div>
       </div>
     </div>`,
   ];
@@ -1588,8 +1642,8 @@ function renderMockup(palette, fonts, brandData) {
         <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.11em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
         <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.72em,1.9vw,1.1em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
         <div style="display:inline-flex;gap:6px;">
-          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
-          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
+          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;">${copy.cta1}</div>
+          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 10%;border-radius:3px;">${copy.cta2}</div>
         </div>
       </div>
       <div style="flex:0.7;background:${p};"></div>
@@ -1599,8 +1653,8 @@ function renderMockup(palette, fonts, brandData) {
       <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
       <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.1vw,1.2em);color:${tl};line-height:1.15;letter-spacing:-0.015em;margin-bottom:8%;">${shortTag}</div>
       <div style="display:inline-flex;gap:8px;">
-        <div style="background:${p};color:${tp};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 11%;border-radius:3px;">Get started</div>
-        <div style="border:1.5px solid ${p};color:${tl};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 11%;border-radius:3px;">Learn more</div>
+        <div style="background:${p};color:${tp};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 11%;border-radius:3px;">${copy.cta1}</div>
+        <div style="border:1.5px solid ${p};color:${tl};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 11%;border-radius:3px;">${copy.cta2}</div>
       </div>
     </div>`,
     // V2: Accent-filled with white text
@@ -1608,7 +1662,7 @@ function renderMockup(palette, fonts, brandData) {
       <div style="flex:1.4;display:flex;flex-direction:column;justify-content:center;padding:7% 9%;">
         <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${ta};opacity:0.6;margin-bottom:5%;">${brandName}</div>
         <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.72em,1.9vw,1.1em);color:${ta};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
-        <div style="background:${ta};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;display:inline-block;max-width:fit-content;">Get started</div>
+        <div style="background:${ta};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;display:inline-block;max-width:fit-content;">${copy.cta1}</div>
       </div>
       <div style="flex:0.6;display:flex;align-items:center;justify-content:center;">
         <div style="width:60%;aspect-ratio:1;border-radius:50%;background:${ta};opacity:0.08;"></div>
@@ -1626,7 +1680,7 @@ function renderMockup(palette, fonts, brandData) {
         <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.56em,1.6vw,0.88em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
       </div>
       <div style="font-family:${bF};font-size:clamp(0.36em,0.95vw,0.56em);color:${ts};opacity:0.5;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
-      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
+      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">${copy.subscribe} →</div>
     </div>`,
     // V1: Dark bg with left accent stripe
     `<div style="display:flex;align-items:center;width:100%;height:100%;background:${dc};">
@@ -1634,7 +1688,7 @@ function renderMockup(palette, fonts, brandData) {
       <div style="display:flex;align-items:center;justify-content:space-between;flex:1;padding:0 5%;">
         <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.56em,1.6vw,0.88em);color:${td};letter-spacing:-0.01em;">${brandName}</span>
         <div style="font-family:${bF};font-size:clamp(0.36em,0.95vw,0.56em);color:${td};opacity:0.45;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
-        <div style="border:1px solid ${a};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
+        <div style="border:1px solid ${a};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">${copy.subscribe} →</div>
       </div>
     </div>`,
   ];
@@ -2410,7 +2464,100 @@ const kit = {
 };
 
 /* ─────────────────────────────────────────────────────────────
-   19. SECTION REGENERATION
+   19. STRATEGY REFINEMENT — STRUCTURED UI
+   ───────────────────────────────────────────────────────────── */
+
+const REFINE_AREAS = {
+  channels: {
+    label: 'Which channel should anchor your strategy?',
+    options: [
+      { label: 'Instagram + TikTok',   value: 'prioritise Instagram and TikTok with short-form video and visual content as the primary channels' },
+      { label: 'LinkedIn B2B',          value: 'pivot to a LinkedIn-first B2B strategy with thought leadership, case studies and professional content' },
+      { label: 'Email + newsletter',    value: 'centre the strategy around email list building, newsletters and owned-audience content' },
+      { label: 'YouTube & long-form',   value: 'lead with YouTube and long-form video as the primary content format and distribution channel' },
+      { label: 'Community-led',         value: 'build around an owned community — Discord, Slack, Reddit or an email community — as the primary channel' },
+      { label: 'Omnichannel',           value: 'distribute content across multiple channels simultaneously with a hub-and-spoke content model' },
+    ],
+  },
+  pillars: {
+    label: 'How should the content pillars be structured?',
+    options: [
+      { label: 'Fewer, deeper — 3 pillars',  value: 'reduce to exactly 3 focused content pillars and go significantly deeper on each one' },
+      { label: 'Broad coverage — 6 pillars', value: 'expand to 6 varied pillars to cover a wider range of topics and formats' },
+      { label: 'Education-heavy',            value: 'weight at least half the pillars toward educational, how-to and instructional content' },
+      { label: 'Story-led',                  value: 'prioritise storytelling, behind-the-scenes and human-interest content across all pillars' },
+      { label: 'Conversion-focused',         value: 'lean the pillars toward conversion-driving content: offers, case studies, social proof and product features' },
+    ],
+  },
+  cadence: {
+    label: 'What posting cadence fits best?',
+    options: [
+      { label: 'High cadence — daily+',         value: 'design for a high-frequency posting cadence of at least once per day, focusing on short-form repeatable formats' },
+      { label: 'Steady rhythm — 3–4×/week',     value: 'aim for a steady 3 to 4 posts per week with consistent publishing days and format variety' },
+      { label: 'Quality over quantity — 1–2×/week', value: 'publish 1 to 2 high-quality, deeply researched pieces per week rather than chasing frequency' },
+      { label: 'Campaign-based',                value: 'organise content around campaigns and launch moments rather than a fixed weekly cadence' },
+    ],
+  },
+  formats: {
+    label: 'Which content formats should dominate?',
+    options: [
+      { label: 'Short-form video',    value: 'lead with short-form video Reels, TikToks and YouTube Shorts as the primary content format' },
+      { label: 'Long-form written',   value: 'centre the strategy on long-form written content: articles, essays, guides and newsletters' },
+      { label: 'Visual / image-led',  value: 'prioritise static images, carousels, infographics and designed visual posts as the dominant format' },
+      { label: 'Podcast + audio',     value: 'build the strategy around podcast episodes and audio content as the flagship format' },
+      { label: 'Interactive + UGC',   value: 'emphasise interactive formats — polls, Q&As, challenges — alongside user-generated content and community participation' },
+    ],
+  },
+  audience: {
+    label: 'Which audience direction should we take?',
+    options: [
+      { label: 'Broaden reach',          value: 'expand reach by creating content that appeals to a wider, more general audience beyond the existing core' },
+      { label: 'Deepen with core fans',  value: 'go deeper with the existing core audience — rewards loyalty, insider knowledge and community-building' },
+      { label: 'Add a B2B layer',        value: 'add a B2B content layer targeting business buyers, decision-makers and professional audiences alongside the existing mix' },
+      { label: 'Gen Z / younger focus',  value: 'shift tone and formats to resonate more strongly with Gen Z and younger millennial audiences' },
+      { label: 'Premium / executive',    value: 'adopt a more premium, executive tone to attract senior decision-makers, high-net-worth or luxury consumers' },
+    ],
+  },
+};
+
+let _refineArea  = null;
+let _refineValue = null;
+
+function selectRefineArea(area) {
+  _refineArea  = area;
+  _refineValue = null;
+  const def = REFINE_AREAS[area];
+  document.getElementById('refine-step-2-label').textContent = def.label;
+  document.getElementById('refine-options').innerHTML = def.options.map((opt, i) =>
+    `<button class="refine-option-btn" onclick="selectRefineOption(${i})">${opt.label}</button>`
+  ).join('');
+  showRefineStep(2);
+}
+
+function selectRefineOption(idx) {
+  _refineValue = REFINE_AREAS[_refineArea].options[idx].value;
+  document.querySelectorAll('.refine-option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+}
+
+function showRefineStep(step) {
+  document.getElementById('refine-step-1').hidden = step !== 1;
+  document.getElementById('refine-step-2').hidden = step !== 2;
+}
+
+function applyStrategyRefinement() {
+  if (!_refineValue || !kit.brandData) return;
+  kit.strategy = generateContentStrategy(kit.brandData, _refineValue);
+  document.getElementById('strategy-content').innerHTML = renderStrategy(kit.strategy);
+  closeEdit('strategy-edit');
+  // Reset steps for next open
+  _refineArea = _refineValue = null;
+  showRefineStep(1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   20. SECTION REGENERATION
    ───────────────────────────────────────────────────────────── */
 
 function regenSection(section) {

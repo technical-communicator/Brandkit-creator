@@ -356,12 +356,55 @@
                   </button>
                 </div>
                 <div class="section-content" id="strategy-content"></div>
-                <div class="edit-panel" id="strategy-edit" hidden>
-                  <label class="edit-label">Regeneration guidance</label>
-                  <input type="text" class="edit-input" id="strategy-guidance" placeholder="e.g., more educational focus, add LinkedIn, emphasize short-form video, B2B audience">
-                  <div class="edit-actions">
-                    <button type="button" class="btn btn--primary btn--sm" onclick="regenSection('strategy')">Regenerate strategy</button>
-                    <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('strategy-edit')">Cancel</button>
+                <div class="edit-panel refine-panel" id="strategy-edit" hidden>
+                  <!-- Step 1: choose target area -->
+                  <div id="refine-step-1">
+                    <div class="edit-label">What would you like to refine?</div>
+                    <div class="refine-areas">
+                      <button class="refine-area-btn" onclick="selectRefineArea('channels')">
+                        <span class="refine-area-icon">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="8" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><path stroke-linecap="round" d="M6 7.2l4-2.4M6 8.8l4 2.4"/></svg>
+                        </span>
+                        Channel mix
+                      </button>
+                      <button class="refine-area-btn" onclick="selectRefineArea('pillars')">
+                        <span class="refine-area-icon">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="10" width="3" height="4" rx="0.5"/><rect x="6.5" y="6" width="3" height="8" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
+                        </span>
+                        Content pillars
+                      </button>
+                      <button class="refine-area-btn" onclick="selectRefineArea('cadence')">
+                        <span class="refine-area-icon">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path stroke-linecap="round" d="M5 2v2M11 2v2M2 7h12"/></svg>
+                        </span>
+                        Posting cadence
+                      </button>
+                      <button class="refine-area-btn" onclick="selectRefineArea('formats')">
+                        <span class="refine-area-icon">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="7" y="7" width="7" height="7" rx="1"/><path stroke-linecap="round" d="M2 11h4M9 5h4"/></svg>
+                        </span>
+                        Content formats
+                      </button>
+                      <button class="refine-area-btn" onclick="selectRefineArea('audience')">
+                        <span class="refine-area-icon">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M1 14c0-2.76 2.24-5 5-5s5 2.24 5 5"/><circle cx="12" cy="6" r="2"/><path stroke-linecap="round" d="M14 14c0-1.66-1.34-3-3-3"/></svg>
+                        </span>
+                        Audience focus
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Step 2: choose option within area -->
+                  <div id="refine-step-2" hidden>
+                    <button class="refine-back-btn" onclick="showRefineStep(1)">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="width:12px;height:12px"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3L5 8l5 5"/></svg>
+                      Back
+                    </button>
+                    <div class="edit-label" id="refine-step-2-label"></div>
+                    <div class="refine-options" id="refine-options"></div>
+                    <div class="edit-actions" style="margin-top:16px;">
+                      <button type="button" class="btn btn--primary btn--sm" onclick="applyStrategyRefinement()">Apply</button>
+                      <button type="button" class="btn btn--ghost btn--sm" onclick="closeEdit('strategy-edit')">Cancel</button>
+                    </div>
                   </div>
                 </div>
               </article>

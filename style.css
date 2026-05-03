@@ -473,18 +473,119 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.edit-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px; }
+.edit-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 12px; }
 .edit-input { width: 100%; margin-bottom: 12px; }
 .edit-actions { display: flex; gap: 8px; }
 
+/* ── Strategy Refinement UI ────────────────────────────────── */
+.refine-panel { min-height: 160px; }
+
+.refine-areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.refine-area-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition), background var(--transition), transform 80ms ease;
+}
+.refine-area-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg);
+  transform: translateY(-1px);
+}
+.refine-area-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--border-light);
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.refine-area-icon svg { width: 14px; height: 14px; }
+
+.refine-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0;
+  margin-bottom: 14px;
+  transition: color var(--transition);
+}
+.refine-back-btn:hover { color: var(--text-primary); }
+
+.refine-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.refine-option-btn {
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-light);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.refine-option-btn:hover { border-color: var(--accent); }
+.refine-option-btn.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ── Palette Section ───────────────────────────────────────── */
+/* Brand colours label */
+.palette-brand-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-muted);
+  margin-bottom: 10px; margin-top: 4px;
+}
+.palette-brand-label--util { margin-top: 20px; }
+
 .palette-swatches {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
 }
-@media (max-width: 700px) { .palette-swatches { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 400px) { .palette-swatches { grid-template-columns: repeat(2, 1fr); } }
+.palette-swatches--brand { grid-template-columns: repeat(3, 1fr); }
+.palette-swatches--util  { grid-template-columns: repeat(2, 1fr); }
+
+/* Utility swatches are slightly shorter */
+.palette-swatches--util .swatch-block { height: 56px; }
+
+@media (max-width: 700px) {
+  .palette-swatches--brand { grid-template-columns: repeat(3, 1fr); }
+  .palette-swatches--util  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
+  .palette-swatches--brand { grid-template-columns: repeat(2, 1fr); }
+  .palette-swatches--util  { grid-template-columns: repeat(2, 1fr); }
+}
 
 .swatch {
   display: flex;
