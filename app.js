@@ -555,11 +555,12 @@ function buildPaletteFromExtracted(extractedColors, brandData) {
   // Ensure primary is rich enough — boost saturation if pale
   const pHsl = hexToHsl(primary);
   if (pHsl.s < 30) primary = hslToHex(pHsl.h, 55, Math.min(pHsl.l, 50));
-  if (!secondary) secondary = lighten(primary, 18);
-  if (!accent)    accent    = complementary(primary);
-  // Nudge accent to be more vibrant
+  if (!secondary) { secondary = Math.random() > 0.5 ? lighten(primary, 16) : darken(primary, 10); }
+  const splitC = splitComplementary(primary);
+  if (!accent) { accent = pick([complementary(primary), splitC[0], splitC[1]]); }
+  // Ensure accent is vibrant enough to function
   const aHsl = hexToHsl(accent);
-  accent = hslToHex(aHsl.h, Math.max(aHsl.s, 60), Math.min(Math.max(aHsl.l, 35), 55));
+  accent = hslToHex(aHsl.h, Math.max(aHsl.s, 58), Math.min(Math.max(aHsl.l, 32), 58));
 
   return assemblePalette(primary, secondary, accent, brandData);
 }
@@ -598,9 +599,27 @@ function generatePaletteFromIndustry(industry, toneWords, guidance = '', archety
   if (toneStr.match(/light|airy|minimal|clean/))               lit = Math.min(70, lit + 14);
   if (toneStr.match(/luxur|elegant|premium/))                 { sat = Math.min(70, sat); lit = Math.max(28, lit - 8); }
 
-  const primary   = hslToHex(baseH, sat, lit);
-  const secondary = hslToHex((baseH + 28) % 360, sat - 14, lit + 12);
-  const accent    = hslToHex((baseH + 180) % 360, sat + 8, lit);
+  // Random micro-jitter keeps each generation visually fresh within the same range
+  const jitter = () => (Math.random() - 0.5) * 10;
+  const rSat = Math.max(10, Math.min(95, sat + jitter()));
+  const rLit = Math.max(18, Math.min(72, lit + jitter()));
+
+  const primary = hslToHex(baseH, rSat, rLit);
+
+  // Randomly pick colour relationship scheme for secondary + accent
+  const scheme = pick(['complementary','split-a','split-b','triadic-a','triadic-b','analogous']);
+  let secH, accH;
+  switch (scheme) {
+    case 'split-a':   secH = (baseH + 22)  % 360; accH = (baseH + 150) % 360; break;
+    case 'split-b':   secH = (baseH + 18)  % 360; accH = (baseH + 210) % 360; break;
+    case 'triadic-a': secH = (baseH + 30)  % 360; accH = (baseH + 120) % 360; break;
+    case 'triadic-b': secH = (baseH + 20)  % 360; accH = (baseH + 240) % 360; break;
+    case 'analogous': secH = (baseH + 35)  % 360; accH = (baseH + 55)  % 360; break;
+    default:          secH = (baseH + 28)  % 360; accH = (baseH + 180) % 360; break;
+  }
+
+  const secondary = hslToHex(secH, Math.max(10, rSat - 14), Math.min(82, rLit + 12));
+  const accent    = hslToHex(accH, Math.min(95, rSat + 8),  Math.max(28, Math.min(58, rLit)));
 
   return assemblePalette(primary, secondary, accent, { toneWords, industry });
 }
@@ -642,7 +661,10 @@ function selectFontPairing(brandData, guidance = '') {
     return { pair, score };
   });
   scores.sort((a, b) => b.score - a.score);
-  return scores[0].pair;
+  // When top scores are close, pick randomly from the top tier for variety
+  const topScore = scores[0].score;
+  const topTier  = scores.filter(s => s.score >= topScore - 3);
+  return pick(topTier).pair;
 }
 
 const loadedFonts = new Set();
@@ -704,18 +726,66 @@ const CHANNEL_TONE_SHIFTS = [
 ];
 
 const VOICE_SAMPLES = {
-  'technology':          (n, t) => `"We built ${n} because we were frustrated with the complexity. Here's what we learned — and what we're still figuring out."`,
-  'food-beverage':       (n, t) => `"This week's menu comes from a conversation with our farmer about what's actually ready right now. It changed everything."`,
-  'health-wellness':     (n, t) => `"We don't believe in perfect. We believe in consistent. ${n} is built for real life — not the highlight reel version of it."`,
-  'fashion-beauty':      (n, t) => `"This piece took six months to get right. Not because we're perfectionists, but because the details matter to the people who will wear it every day."`,
-  'finance':             (n, t) => `"Here's what the fine print actually means, in plain language. No catches. No hidden conditions."`,
-  'education':           (n, t) => `"You don't need to have it all figured out before you start. ${n} is designed for exactly where you are right now."`,
-  'arts-entertainment':  (n, t) => `"This project started as a mistake. Here's why we're glad it did."`,
-  'real-estate':         (n, t) => `"The market has shifted. Here's what that actually means if you're thinking about buying in the next six months."`,
-  'travel-hospitality':  (n, t) => `"The best version of this trip isn't on TripAdvisor. We'll show you where to actually go."`,
-  'nonprofit':           (n, t) => `"Last month, 847 families accessed fresh produce for the first time in years. This is what that looked like."`,
-  'retail':              (n, t) => `"We made fewer units this season. Not because of supply — because we wanted to make sure each one was worth keeping."`,
-  'professional-services':(n, t) => `"Most strategies fail in execution, not in planning. Here's where we see it go wrong — and how we prevent it."`,
+  'technology': [
+    n => `"We built ${n} because we were frustrated with the complexity. Here's what we learned — and what we're still figuring out."`,
+    n => `"Here's the honest post-mortem on our biggest product decision of the year. It didn't go perfectly. That's why we're sharing it."`,
+    n => `"Fewer features. More focus. Here's what we removed from ${n} this quarter, and exactly why."`,
+  ],
+  'food-beverage': [
+    n => `"This week's menu comes from a conversation with our farmer about what's actually ready right now. It changed everything."`,
+    n => `"We charred these for eleven minutes. Not ten. Not twelve. The difference matters — and this is why."`,
+    n => `"Our supplier called us last Tuesday. The harvest was early. So is this week's special. Come in while it lasts."`,
+  ],
+  'health-wellness': [
+    n => `"We don't believe in perfect. We believe in consistent. ${n} is built for real life — not the highlight reel version of it."`,
+    n => `"Three years of research went into this formula. Here's the study that changed what we thought we knew."`,
+    n => `"The hardest part isn't starting. It's the Tuesday in week three when you don't feel like it. ${n} is built for that Tuesday."`,
+  ],
+  'fashion-beauty': [
+    n => `"This piece took six months to get right. Not because we're perfectionists, but because the details matter to the people who will wear it every day."`,
+    n => `"We stopped doing seasonal drops. Here's what we're doing instead, and why we think it's better for everyone."`,
+    n => `"Our tailor has been doing this for thirty-one years. We asked her what most brands get wrong about fit. She had a lot to say."`,
+  ],
+  'finance': [
+    n => `"Here's what the fine print actually means, in plain language. No catches. No hidden conditions."`,
+    n => `"The interest rate changed. Here's exactly how it affects your account, in three sentences."`,
+    n => `"Most people don't read the annual report. We rewrote ours so you would."`,
+  ],
+  'education': [
+    n => `"You don't need to have it all figured out before you start. ${n} is designed for exactly where you are right now."`,
+    n => `"We tracked 2,000 learners over two years. The one habit that predicted success had nothing to do with talent."`,
+    n => `"Our most successful students all had one thing in common. It wasn't intelligence. It was this."`,
+  ],
+  'arts-entertainment': [
+    n => `"This project started as a mistake. Here's why we're glad it did."`,
+    n => `"We almost didn't release this. Here's the conversation that changed our minds."`,
+    n => `"The first version was terrible. We're showing it to you anyway, because the gap between that and this is the whole story."`,
+  ],
+  'real-estate': [
+    n => `"The market has shifted. Here's what that actually means if you're thinking about buying in the next six months."`,
+    n => `"We turned down this listing. Here's why — and what it says about how we work."`,
+    n => `"Buyers keep asking us about this neighbourhood. Here's the honest answer, including the parts other agents skip."`,
+  ],
+  'travel-hospitality': [
+    n => `"The best version of this trip isn't on TripAdvisor. We'll show you where to actually go."`,
+    n => `"We visited forty-three properties before we chose this one. Here's what made it different from the other forty-two."`,
+    n => `"Low season. Lower prices. Fewer crowds. The same place, experienced the way locals actually experience it."`,
+  ],
+  'nonprofit': [
+    n => `"Last month, 847 families accessed fresh produce for the first time in years. This is what that looked like."`,
+    n => `"We didn't hit our target this quarter. Here's what we're doing differently — and why your trust matters more than the number."`,
+    n => `"The funding gap is real. Here's exactly what $50 does, in specific, concrete terms. No vagueness."`,
+  ],
+  'retail': [
+    n => `"We made fewer units this season. Not because of supply — because we wanted to make sure each one was worth keeping."`,
+    n => `"This product has a two-year waitlist. We asked ourselves why, and it told us everything about what to build next."`,
+    n => `"We got a thousand returns last year. We read every note. Here's what we changed because of them."`,
+  ],
+  'professional-services': [
+    n => `"Most strategies fail in execution, not in planning. Here's where we see it go wrong — and how we prevent it."`,
+    n => `"We walked away from a client last year. Here's why, and what it says about the kind of work we do."`,
+    n => `"The brief said 'increase revenue'. The real problem was different. Here's how we found it."`,
+  ],
 };
 
 function generateBrandVoice(brandData, guidance = '') {
@@ -739,13 +809,20 @@ function generateBrandVoice(brandData, guidance = '') {
     dont_example: TRAIT_LIBRARY[w].dont,
   }));
 
-  // Intro paragraph
-  const t = traits.map(t => t.trait);
-  const audienceClause = audience ? ` for ${audience.split(',')[0].trim().toLowerCase()}` : '';
+  // Intro paragraph — pick randomly from varied templates
+  const t = traits.map(tr => tr.trait);
+  const shortAud = audience.split(',')[0].trim().toLowerCase() || 'people who care';
   const avoidClause = avoid ? ` We never ${avoid.split(',')[0].trim().toLowerCase()}.` : '';
-  const intro = archIntroText
-    ? `${archIntroText}${avoidClause}`
-    : `${brandName}'s voice is ${t[0]}, ${t[1]}, and ${t[2]}${t[3] ? ` — always ${t[3]}` : ''}. Every word${audienceClause} earns its place.${avoidClause}`;
+  const avoidFirst  = avoid ? avoid.split(',')[0].trim().toLowerCase() : 'corporate jargon';
+
+  const introTemplates = archIntroText ? [`${archIntroText}${avoidClause}`] : [
+    `${brandName}'s voice is ${t[0]}, ${t[1]}, and ${t[2]}${t[3] ? ` — always ${t[3]}` : ''}. Every word${audience ? ` for ${shortAud}` : ''} earns its place.${avoidClause}`,
+    `${brandName} believes ${t[0].toLowerCase()} communication builds better relationships than clever copy ever could. ${cap(t[1])} in everything — ${cap(t[2])} when it counts.${avoidClause}`,
+    `When ${brandName} shows up — in an email, on a product label, in a social post — the tone is always ${t[0]} and ${t[1]}. Never ${avoidFirst}.`,
+    `Every ${brandName} piece of writing asks one question before it goes out: would ${shortAud} find this ${t[0]}? If not, rewrite it.${avoidClause}`,
+    `${brandName} writes ${t[0]}ly. Speaks ${t[1]}ly. Always for ${shortAud}. Never ${avoidFirst}.`,
+  ];
+  const intro = pick(introTemplates);
 
   // Writing rules based on tone sliders (0=formal/measured, 100=casual/enthusiastic)
   const fml = formality;   // 0=formal, 100=casual
@@ -760,8 +837,8 @@ function generateBrandVoice(brandData, guidance = '') {
     headlines:       ent < 30 ? 'Declarative — state the point plainly.' : ent < 65 ? 'Lead with value or curiosity.' : 'Bold, action-oriented headlines. Start with a verb.',
   };
 
-  const sampleFn = VOICE_SAMPLES[industry] || VOICE_SAMPLES['technology'];
-  const sample   = sampleFn(brandName, toneWords);
+  const sampleArr = VOICE_SAMPLES[industry] || VOICE_SAMPLES['technology'];
+  const sample    = pick(sampleArr)(brandName);
 
   return { intro, traits, writingRules, channels: CHANNEL_TONE_SHIFTS, sample };
 }
@@ -813,27 +890,46 @@ function generateTaglines(brandData, guidance = '') {
 
   const guidanceLower = guidance.toLowerCase();
 
+  // Expanded pool of 22 templates — shuffled each run for fresh picks
+  const verbLower = verb.toLowerCase();
   const pool = [
-    { text: `${n}. ${verb} ${obj}.`,                             type: 'Action' },
-    { text: `Less ${contrast}. More ${t0.toLowerCase()}.`,       type: 'Contrast' },
-    { text: `The ${generic} for ${shortAud} who mean it.`,       type: 'Audience' },
-    { text: `${t0}. ${t1}. Always ${n}.`,                        type: 'Traits' },
-    { text: `${verb} ${obj}, ${t0.toLowerCase()}ly.`,            type: 'Adverb' },
-    { text: `Not just a ${generic}. ${n}.`,                      type: 'Differentiation' },
-    { text: `${cap(shortDesc)}, by ${n}.`,                       type: 'Descriptive' },
-    { text: `${n} — where ${t0.toLowerCase()} meets ${t1.toLowerCase()}.`, type: 'Intersection' },
-    { text: `The ${t0.toLowerCase()} choice for ${shortAud}.`,   type: 'Positioning' },
-    { text: `${verb} differently. Live ${t0.toLowerCase()}ly.`,  type: 'Manifesto' },
+    { text: `${n}. ${verb} ${obj}.`,                                         type: 'Action' },
+    { text: `Less ${contrast}. More ${t0.toLowerCase()}.`,                   type: 'Contrast' },
+    { text: `The ${generic} for ${shortAud} who mean it.`,                   type: 'Audience' },
+    { text: `${t0}. ${t1}. ${n}.`,                                           type: 'Traits' },
+    { text: `${verb} ${obj}, ${t0.toLowerCase()}ly.`,                        type: 'Adverb' },
+    { text: `Not just a ${generic}. ${n}.`,                                  type: 'Differentiation' },
+    { text: `${cap(shortDesc)}, by ${n}.`,                                   type: 'Descriptive' },
+    { text: `${n} — where ${t0.toLowerCase()} meets ${t1.toLowerCase()}.`,   type: 'Intersection' },
+    { text: `The ${t0.toLowerCase()} choice for ${shortAud}.`,               type: 'Positioning' },
+    { text: `${verb} differently. ${n}.`,                                    type: 'Manifesto' },
+    // New templates
+    { text: `${n}. ${t0} by design.`,                                        type: 'Signature' },
+    { text: `Made for ${shortAud}. Made different.`,                         type: 'Built For' },
+    { text: `${t0}. Full stop.`,                                             type: 'Minimal' },
+    { text: `The world has enough ${generic}s. Meet ${n}.`,                  type: 'Anti-category' },
+    { text: `${n}: ${verbLower} ${obj} the ${t0.toLowerCase()} way.`,        type: 'The Way' },
+    { text: `Here's to ${t0.toLowerCase()} ${generic}.`,                     type: 'Toast' },
+    { text: `${t0}. ${t1}. Uncompromisingly ${n}.`,                          type: 'Uncompromising' },
+    { text: `Built for ${shortAud}. Proven by results.`,                     type: 'Credibility' },
+    { text: `What ${t0.toLowerCase()} looks like.`,                          type: 'Definition' },
+    { text: `${n}: ${shortDesc}.`,                                           type: 'Colon Statement' },
+    { text: `${verb} ${obj}. No shortcuts.`,                                 type: 'No Shortcuts' },
+    { text: `${t0} enough to matter. ${t1} enough to last.`,                 type: 'Duality' },
   ];
 
-  // Guidance filters
-  let sorted = [...pool];
-  if (guidanceLower.includes('short') || guidanceLower.includes('punchy')) sorted.sort((a, b) => a.text.length - b.text.length);
-  if (guidanceLower.includes('aspir')) sorted = sorted.filter(t => ['Action','Manifesto','Intersection'].includes(t.type)).concat(sorted);
-  if (guidanceLower.includes('direct') || guidanceLower.includes('benefit')) sorted = sorted.filter(t => ['Action','Audience','Positioning'].includes(t.type)).concat(sorted);
-  if (guidanceLower.includes('clever') || guidanceLower.includes('wordplay')) sorted = sorted.filter(t => ['Contrast','Intersection','Adverb'].includes(t.type)).concat(sorted);
+  // Shuffle for fresh picks each generation
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
 
-  // De-duplicate by text and return 6
+  // Guidance re-ordering (promote matching types to front without removing others)
+  let sorted = [...shuffled];
+  if (guidanceLower.includes('short') || guidanceLower.includes('punchy')) sorted.sort((a, b) => a.text.length - b.text.length);
+  if (guidanceLower.includes('aspir')) sorted = sorted.filter(t => ['Action','Manifesto','Intersection','Toast'].includes(t.type)).concat(sorted);
+  if (guidanceLower.includes('direct') || guidanceLower.includes('benefit')) sorted = sorted.filter(t => ['Action','Audience','Positioning','Credibility'].includes(t.type)).concat(sorted);
+  if (guidanceLower.includes('clever') || guidanceLower.includes('wordplay')) sorted = sorted.filter(t => ['Contrast','Intersection','Adverb','Duality','Minimal'].includes(t.type)).concat(sorted);
+  if (guidanceLower.includes('minim') || guidanceLower.includes('simple')) sorted = sorted.filter(t => ['Minimal','Signature','Action'].includes(t.type)).concat(sorted);
+
+  // De-duplicate and return 6
   const seen = new Set();
   return sorted.filter(t => { if (seen.has(t.text)) return false; seen.add(t.text); return true; }).slice(0, 6);
 }
@@ -1197,6 +1293,13 @@ function renderMockup(palette, fonts, brandData) {
   const a  = palette.accent.hex;
   const lc = palette.light.hex;
   const dc = palette.dark.hex;
+  // Pick a visual variant set for this render (changes each generation)
+  const vCard    = Math.floor(Math.random() * 3);
+  const vProfile = Math.floor(Math.random() * 2);
+  const vFeed    = Math.floor(Math.random() * 3);
+  const vStory   = Math.floor(Math.random() * 2);
+  const vHero    = Math.floor(Math.random() * 3);
+  const vEmail   = Math.floor(Math.random() * 2);
   const tp = textOnBg(p);
   const ts = textOnBg(s);
   const tl = textOnBg(lc);
@@ -1209,37 +1312,74 @@ function renderMockup(palette, fonts, brandData) {
   const handle = '@' + brandName.toLowerCase().replace(/\s+/g, '');
   const initials = brandName.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
 
-  // ── 1. Business Card (landscape 1.6:1) ─────────────────
-  const card = `
-    <div style="display:flex;width:100%;height:100%;">
+  // ── 1. Business Card (landscape 1.6:1) — 3 variants ───
+  const cardVariants = [
+    // V0: Classic split — primary left, light right
+    `<div style="display:flex;width:100%;height:100%;">
       <div style="width:38%;background:${p};display:flex;flex-direction:column;justify-content:space-between;padding:11% 9%;">
-        <div style="width:20px;height:20px;border-radius:3px;background:${a};opacity:0.85;"></div>
+        <div style="width:18px;height:18px;border-radius:3px;background:${a};opacity:0.85;"></div>
         <div>
           <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.9em,2.5vw,1.3em);color:${tp};line-height:1.15;letter-spacing:-0.01em;">${brandName}</div>
-          <div style="width:22px;height:2.5px;background:${a};border-radius:2px;margin-top:8%;"></div>
+          <div style="width:22px;height:2px;background:${a};border-radius:2px;margin-top:8%;"></div>
         </div>
       </div>
       <div style="flex:1;background:${lc};display:flex;flex-direction:column;justify-content:center;padding:9% 11%;">
-        <div style="font-family:${bF};font-size:clamp(0.52em,1.3vw,0.72em);color:${tl};opacity:0.6;line-height:1.55;margin-bottom:12%;">${shortTag}</div>
-        <div style="font-family:${bF};font-size:clamp(0.42em,0.95vw,0.58em);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${tl};opacity:0.3;">${handle}.com</div>
+        <div style="font-family:${bF};font-size:clamp(0.5em,1.2vw,0.68em);color:${tl};opacity:0.55;line-height:1.55;margin-bottom:12%;">${shortTag}</div>
+        <div style="font-family:${bF};font-size:clamp(0.4em,0.9vw,0.55em);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${tl};opacity:0.28;">${handle}.com</div>
       </div>
-    </div>`;
+    </div>`,
+    // V1: All-dark editorial with name centred
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${dc};gap:6%;">
+      <div style="font-family:${bF};font-size:clamp(0.38em,0.85vw,0.5em);font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${a};">${brandName.toUpperCase()}</div>
+      <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.9em,2.4vw,1.4em);color:${td};line-height:1.15;letter-spacing:-0.02em;text-align:center;">${shortTag}</div>
+      <div style="width:32px;height:1px;background:${a};opacity:0.6;"></div>
+      <div style="font-family:${bF};font-size:clamp(0.38em,0.85vw,0.5em);color:${td};opacity:0.35;letter-spacing:0.06em;">${handle}.com</div>
+    </div>`,
+    // V2: Light with top accent stripe + right-aligned layout
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
+      <div style="height:5px;background:${a};flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:8% 10%;">
+        <div>
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.85em,2.2vw,1.2em);color:${tl};letter-spacing:-0.01em;line-height:1.15;">${brandName}</div>
+          <div style="font-family:${bF};font-size:clamp(0.42em,0.95vw,0.56em);color:${tl};opacity:0.5;margin-top:6%;">${shortTag}</div>
+        </div>
+        <div style="width:32px;height:32px;border-radius:6px;background:${p};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-family:${hF};font-size:12px;font-weight:900;color:${tp};">${initials[0]}</span>
+        </div>
+      </div>
+    </div>`,
+  ];
+  const card = cardVariants[vCard];
 
-  // ── 2. Profile Picture / Avatar (1:1) ──────────────────
-  const profile = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${lc};gap:8%;">
+  // ── 2. Profile Picture / Avatar (1:1) — 2 variants ────
+  const profileVariants = [
+    // V0: Light bg with circle avatar
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${lc};gap:8%;">
       <div style="width:48%;aspect-ratio:1/1;border-radius:50%;background:${p};border:3px solid ${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <span style="font-family:${hF};font-weight:900;font-size:clamp(1.1em,3.5vw,2em);color:${tp};line-height:1;">${initials}</span>
       </div>
       <div style="text-align:center;padding:0 8%;">
-        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.65em,1.8vw,0.9em);color:${tl};letter-spacing:-0.01em;line-height:1.2;">${brandName}</div>
-        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.55em);color:${tl};opacity:0.45;letter-spacing:0.04em;text-transform:uppercase;margin-top:5%;">${handle}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.65em,1.8vw,0.9em);color:${tl};letter-spacing:-0.01em;">${brandName}</div>
+        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.52em);color:${tl};opacity:0.4;letter-spacing:0.05em;text-transform:uppercase;margin-top:5%;">${handle}</div>
       </div>
-    </div>`;
+    </div>`,
+    // V1: Full primary bg with light circle
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${p};gap:8%;">
+      <div style="width:46%;aspect-ratio:1/1;border-radius:50%;background:${lc};border:2px solid ${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-family:${hF};font-weight:900;font-size:clamp(1.1em,3.5vw,2em);color:${p};line-height:1;">${initials}</span>
+      </div>
+      <div style="text-align:center;padding:0 8%;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.65em,1.8vw,0.9em);color:${tp};letter-spacing:-0.01em;">${brandName}</div>
+        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.52em);color:${tp};opacity:0.5;letter-spacing:0.05em;text-transform:uppercase;margin-top:5%;">${handle}</div>
+      </div>
+    </div>`,
+  ];
+  const profile = profileVariants[vProfile];
 
-  // ── 3. Instagram Feed Post (square 1:1) ─────────────────
-  const feed = `
-    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
+  // ── 3. Instagram Feed Post (square 1:1) — 3 variants ──
+  const feedVariants = [
+    // V0: Primary image area with tagline centred
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
       <div style="display:flex;align-items:center;gap:7px;padding:6% 7% 3%;">
         <div style="width:22px;height:22px;border-radius:50%;background:${p};border:1.5px solid ${a};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
           <span style="font-family:${hF};font-size:9px;font-weight:900;color:${tp};">${initials[0]}</span>
@@ -1251,13 +1391,35 @@ function renderMockup(palette, fonts, brandData) {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4% 7% 6%;">
         <div style="font-family:${bF};font-size:clamp(0.4em,0.95vw,0.55em);color:${tl};opacity:0.45;">${handle}</div>
-        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:3% 8%;border-radius:3px;letter-spacing:0.03em;">Follow</div>
+        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.5em);font-weight:700;padding:3% 8%;border-radius:3px;">Follow</div>
       </div>
-    </div>`;
+    </div>`,
+    // V1: Editorial quote style — dark bg, large quote marks
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${dc};">
+      <div style="display:flex;align-items:center;gap:7px;padding:6% 7% 3%;">
+        <div style="width:20px;height:20px;border-radius:50%;background:${a};flex-shrink:0;"></div>
+        <span style="font-family:${bF};font-size:clamp(0.45em,1vw,0.58em);font-weight:700;color:${a};letter-spacing:0.05em;text-transform:uppercase;">${brandName}</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:4% 9%;">
+        <div style="font-family:${hF};font-size:clamp(2em,6vw,4em);color:${a};line-height:0.7;margin-bottom:4%;opacity:0.8;">"</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.78em,2vw,1.1em);color:${td};line-height:1.25;letter-spacing:-0.01em;">${shortTag}</div>
+      </div>
+      <div style="padding:4% 9% 7%;font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);color:${td};opacity:0.35;">${handle}</div>
+    </div>`,
+    // V2: Minimal light — centred text, accent rule, no image area
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${lc};">
+      <div style="width:24px;height:3px;background:${a};border-radius:2px;margin-bottom:10%;"></div>
+      <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.2vw,1.2em);color:${tl};line-height:1.2;letter-spacing:-0.01em;text-align:center;padding:0 10%;">${shortTag}</div>
+      <div style="width:24px;height:3px;background:${a};border-radius:2px;margin-top:10%;"></div>
+      <div style="font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:${tl};opacity:0.35;margin-top:8%;">${brandName}</div>
+    </div>`,
+  ];
+  const feed = feedVariants[vFeed];
 
-  // ── 4. Instagram Story (portrait 9:16) ──────────────────
-  const story = `
-    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:${dc};">
+  // ── 4. Instagram Story (portrait 9:16) — 2 variants ───
+  const storyVariants = [
+    // V0: Dark with accent rule + swipe up
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${dc};">
       <div style="display:flex;align-items:center;gap:7px;padding:7% 6% 4%;">
         <div style="width:22px;height:22px;border-radius:50%;background:${p};border:2px solid ${a};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
           <span style="font-family:${hF};font-size:9px;font-weight:900;color:${tp};">${initials[0]}</span>
@@ -1271,32 +1433,85 @@ function renderMockup(palette, fonts, brandData) {
       <div style="display:flex;flex-direction:column;align-items:center;padding-bottom:9%;gap:4%;">
         <div style="font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};">Swipe up ↑</div>
       </div>
-    </div>`;
+    </div>`,
+    // V1: Primary colour fill, bold centred layout
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${p};">
+      <div style="display:flex;align-items:center;gap:7px;padding:7% 6% 4%;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${lc};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:${hF};font-size:9px;font-weight:900;color:${p};">${initials[0]}</span>
+        </div>
+        <span style="font-family:${bF};font-size:clamp(0.48em,1.2vw,0.62em);font-weight:700;color:${tp};letter-spacing:0.02em;opacity:0.85;">${brandName}</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6% 10%;text-align:center;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(1em,3vw,1.6em);color:${tp};line-height:1.15;letter-spacing:-0.015em;">${shortTag}</div>
+        <div style="width:36px;height:2px;background:${tp};opacity:0.35;margin-top:10%;"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding-bottom:9%;">
+        <div style="background:${lc};color:${tl};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:3% 10%;border-radius:20px;letter-spacing:0.05em;">Learn more →</div>
+      </div>
+    </div>`,
+  ];
+  const story = storyVariants[vStory];
 
-  // ── 5. Web Hero (wide 2.4:1) ────────────────────────────
-  const hero = `
-    <div style="display:flex;width:100%;height:100%;">
+  // ── 5. Web Hero (wide 2.4:1) — 3 variants ──────────────
+  const heroVariants = [
+    // V0: Dark + primary split
+    `<div style="display:flex;width:100%;height:100%;">
       <div style="flex:1.3;background:${dc};display:flex;flex-direction:column;justify-content:center;padding:7% 8%;">
-        <div style="font-family:${bF};font-size:clamp(0.38em,0.95vw,0.52em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+        <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.11em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
         <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.72em,1.9vw,1.1em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
         <div style="display:inline-flex;gap:6px;">
-          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
-          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
+          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
+          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
         </div>
       </div>
       <div style="flex:0.7;background:${p};"></div>
-    </div>`;
+    </div>`,
+    // V1: Full-width centred, light background
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${lc};text-align:center;padding:6% 10%;">
+      <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+      <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.1vw,1.2em);color:${tl};line-height:1.15;letter-spacing:-0.015em;margin-bottom:8%;">${shortTag}</div>
+      <div style="display:inline-flex;gap:8px;">
+        <div style="background:${p};color:${tp};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 11%;border-radius:3px;">Get started</div>
+        <div style="border:1.5px solid ${p};color:${tl};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:600;padding:4% 11%;border-radius:3px;">Learn more</div>
+      </div>
+    </div>`,
+    // V2: Accent-filled with white text
+    `<div style="display:flex;width:100%;height:100%;background:${a};">
+      <div style="flex:1.4;display:flex;flex-direction:column;justify-content:center;padding:7% 9%;">
+        <div style="font-family:${bF};font-size:clamp(0.36em,0.9vw,0.5em);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${ta};opacity:0.6;margin-bottom:5%;">${brandName}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.72em,1.9vw,1.1em);color:${ta};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
+        <div style="background:${ta};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.48em);font-weight:700;padding:4% 10%;border-radius:3px;display:inline-block;max-width:fit-content;">Get started</div>
+      </div>
+      <div style="flex:0.6;display:flex;align-items:center;justify-content:center;">
+        <div style="width:60%;aspect-ratio:1;border-radius:50%;background:${ta};opacity:0.08;"></div>
+      </div>
+    </div>`,
+  ];
+  const hero = heroVariants[vHero];
 
-  // ── 6. Email Banner (very wide 4:1) ─────────────────────
-  const email = `
-    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;background:${s};padding:0 5%;">
+  // ── 6. Email Banner (very wide 4:1) — 2 variants ───────
+  const emailVariants = [
+    // V0: Secondary bg, three columns
+    `<div style="display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;background:${s};padding:0 5%;">
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
         <div style="width:22px;height:22px;border-radius:4px;background:${p};flex-shrink:0;"></div>
-        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.58em,1.7vw,0.92em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
+        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.56em,1.6vw,0.88em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
       </div>
-      <div style="font-family:${bF};font-size:clamp(0.38em,1vw,0.6em);color:${ts};opacity:0.55;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
-      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.52em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
-    </div>`;
+      <div style="font-family:${bF};font-size:clamp(0.36em,0.95vw,0.56em);color:${ts};opacity:0.5;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
+      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
+    </div>`,
+    // V1: Dark bg with left accent stripe
+    `<div style="display:flex;align-items:center;width:100%;height:100%;background:${dc};">
+      <div style="width:4px;height:100%;background:${a};flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex:1;padding:0 5%;">
+        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.56em,1.6vw,0.88em);color:${td};letter-spacing:-0.01em;">${brandName}</span>
+        <div style="font-family:${bF};font-size:clamp(0.36em,0.95vw,0.56em);color:${td};opacity:0.45;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
+        <div style="border:1px solid ${a};color:${a};font-family:${bF};font-size:clamp(0.34em,0.82vw,0.5em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
+      </div>
+    </div>`,
+  ];
+  const email = emailVariants[vEmail];
 
   return `
     <div class="mockup-grid">
