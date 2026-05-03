@@ -873,12 +873,13 @@ function generateContentStrategy(brandData, guidance = '') {
    ───────────────────────────────────────────────────────────── */
 
 function renderPalette(palette) {
-  const entries = Object.values(palette);
-  const swatches = entries.map(({ hex, role, usage }) => {
+  const swatches = Object.entries(palette).map(([key, { hex, role, usage }]) => {
     const fg = textOnBg(hex);
     return `
       <div class="swatch">
         <div class="swatch-block" style="background:${hex}">
+          <input type="color" class="swatch-picker" value="${hex}" title="Click to adjust ${role} colour"
+            oninput="liveUpdateColor('${key}', this.value)">
           <button class="swatch-copy" style="color:${fg}" onclick="copyHex('${hex}',this)" title="Copy ${hex}">Copy</button>
         </div>
         <div class="swatch-info">
@@ -889,8 +890,6 @@ function renderPalette(palette) {
       </div>`;
   }).join('');
 
-  const primary = palette.primary.hex;
-  const onPrimary = textOnBg(primary);
   const cr = contrastRatio(palette.neutral.hex, palette.light.hex).toFixed(1);
 
   return `
@@ -898,7 +897,22 @@ function renderPalette(palette) {
     <div class="palette-note">
       <strong>60-30-10 rule:</strong> Light (${palette.light.hex}) fills 60% of surfaces. Primary + Secondary carry 30%. Accent (${palette.accent.hex.toUpperCase()}) is reserved for calls-to-action and links only — never as a background fill.
       Body text (${palette.neutral.hex.toUpperCase()}) on light background passes WCAG AA at ${cr}:1 contrast.
+      <span class="palette-picker-hint">Click any swatch to adjust its colour.</span>
     </div>`;
+}
+
+function liveUpdateColor(role, hex) {
+  if (!kit.palette || !kit.palette[role]) return;
+  kit.palette[role] = { ...kit.palette[role], hex };
+  clearTimeout(liveUpdateColor._t);
+  liveUpdateColor._t = setTimeout(() => {
+    document.getElementById('palette-content').innerHTML = renderPalette(kit.palette);
+    if (kit.fonts && kit.brandData) {
+      document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...kit.brandData, taglines: kit.taglines });
+      kit.wordmark = generateWordmark({ ...kit.brandData, taglines: kit.taglines }, kit.fonts, kit.palette);
+      document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
+    }
+  }, 280);
 }
 
 function copyHex(hex, btn) {
@@ -913,7 +927,14 @@ function copyHex(hex, btn) {
    13. RENDER — TYPOGRAPHY
    ───────────────────────────────────────────────────────────── */
 
-function renderTypography(pair, brandName) {
+function renderTypography(pair, brandData) {
+  // Accept either a full brandData object or a plain string brandName (backwards-compat)
+  const brandName = typeof brandData === 'string' ? brandData : (brandData?.brandName || 'Your Brand');
+  const taglines  = (typeof brandData === 'object' && brandData?.taglines) || [];
+  const taglineText = (taglines[0]?.text || brandData?.description || '').replace(/"/g, '').trim();
+  const descText    = (typeof brandData === 'object' && (brandData?.description || brandData?.whatDoes)) || '';
+  const bodyPreview = descText || 'Body copy that carries the reader from sentence to sentence — building understanding without demanding effort. Clear, considered, worth reading.';
+
   loadGoogleFont(pair.heading, `${pair.hw}`);
   if (pair.body !== pair.heading) loadGoogleFont(pair.body, `${pair.bw};400;600`);
 
@@ -921,10 +942,10 @@ function renderTypography(pair, brandName) {
   const bStyle = `font-family:'${pair.body}',sans-serif;font-weight:${pair.bw};`;
 
   const scaleRows = [
-    { label: 'Heading 1', size: '48px', weight: pair.hw, sample: brandName || 'Heading One', font: pair.heading },
-    { label: 'Heading 2', size: '32px', weight: pair.hw, sample: 'Section Title',            font: pair.heading },
-    { label: 'Heading 3', size: '22px', weight: pair.hw, sample: 'Subsection Heading',        font: pair.heading },
-    { label: 'Body',      size: '16px', weight: pair.bw, sample: 'Body text — clear, readable, at 1.6 line-height.', font: pair.body },
+    { label: 'Heading 1', size: '48px', weight: pair.hw, sample: brandName,          font: pair.heading },
+    { label: 'Heading 2', size: '32px', weight: pair.hw, sample: taglineText || 'Your brand tagline goes here', font: pair.heading },
+    { label: 'Heading 3', size: '22px', weight: pair.hw, sample: 'Section heading',  font: pair.heading },
+    { label: 'Body',      size: '16px', weight: pair.bw, sample: bodyPreview.slice(0, 90), font: pair.body },
     { label: 'Caption',   size: '12px', weight: pair.bw, sample: 'Captions, labels, metadata', font: pair.body },
   ].map(r => `
     <div class="type-scale-row">
@@ -938,18 +959,18 @@ function renderTypography(pair, brandName) {
       <div class="type-card">
         <div class="type-card-label">Heading Font</div>
         <div class="type-card-family">${pair.heading}</div>
-        <div class="type-card-details">Weight ${pair.hw} · Serif display</div>
-        <div class="type-sample-heading" style="${hStyle}font-size:clamp(1.4rem,4vw,2rem);line-height:1.2;">The quick brown fox jumps over the lazy dog.</div>
+        <div class="type-card-details">Weight ${pair.hw} · Display</div>
+        <div class="type-sample-heading" style="${hStyle}font-size:clamp(1.4rem,4vw,2rem);line-height:1.2;">${taglineText || brandName}</div>
       </div>
       <div class="type-card">
         <div class="type-card-label">Body Font</div>
         <div class="type-card-family">${pair.body}</div>
         <div class="type-card-details">Weight ${pair.bw} · Body text</div>
-        <div class="type-sample-body" style="${bStyle}font-size:15px;line-height:1.65;">Great typography is invisible. It carries the reader from word to word, idea to idea, without calling attention to itself.</div>
+        <div class="type-sample-body" style="${bStyle}font-size:15px;line-height:1.65;">${bodyPreview.slice(0, 140)}</div>
       </div>
     </div>
     <div class="type-scale">${scaleRows}</div>
-    <p class="type-pairing-desc">Pairing: <strong>${pair.heading} + ${pair.body}</strong> — ${pair.desc} Use headings for hierarchy signals, body for readability. Maintain a minimum 4.5:1 contrast ratio on all body text.</p>`;
+    <p class="type-pairing-desc">Pairing: <strong>${pair.heading} + ${pair.body}</strong> — ${pair.desc} Maintain a minimum 4.5:1 contrast ratio on all body text.</p>`;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1021,10 +1042,16 @@ function renderTagline(taglines, selectedIdx = 0) {
 function selectTagline(idx) {
   kit.activeTagline = idx;
   document.getElementById('tagline-content').innerHTML = renderTagline(kit.taglines, idx);
+  // Propagate new tagline to mockup and wordmark
+  if (kit.palette && kit.fonts && kit.brandData) {
+    document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...kit.brandData, taglines: kit.taglines });
+    kit.wordmark = generateWordmark({ ...kit.brandData, taglines: kit.taglines }, kit.fonts, kit.palette);
+    document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
-   16. RENDER — VISUAL MOCKUPS (5 distinct contexts)
+   16. RENDER — VISUAL MOCKUPS (6 contexts)
    ───────────────────────────────────────────────────────────── */
 
 /* ─────────────────────────────────────────────────────────────
@@ -1179,6 +1206,9 @@ function renderMockup(palette, fonts, brandData) {
   const bF = `'${fonts.body}',system-ui,sans-serif`;
   const hw = fonts.hw;
 
+  const handle = '@' + brandName.toLowerCase().replace(/\s+/g, '');
+  const initials = brandName.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+
   // ── 1. Business Card (landscape 1.6:1) ─────────────────
   const card = `
     <div style="display:flex;width:100%;height:100%;">
@@ -1190,73 +1220,92 @@ function renderMockup(palette, fonts, brandData) {
         </div>
       </div>
       <div style="flex:1;background:${lc};display:flex;flex-direction:column;justify-content:center;padding:9% 11%;">
-        <div style="font-family:${bF};font-size:clamp(0.55em,1.4vw,0.78em);color:${tl};opacity:0.65;line-height:1.55;margin-bottom:12%;">${shortTag}</div>
-        <div style="font-family:${bF};font-size:clamp(0.45em,1vw,0.6em);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${tl};opacity:0.35;">${brandName.toLowerCase().replace(/\s+/g,'')}.com</div>
+        <div style="font-family:${bF};font-size:clamp(0.52em,1.3vw,0.72em);color:${tl};opacity:0.6;line-height:1.55;margin-bottom:12%;">${shortTag}</div>
+        <div style="font-family:${bF};font-size:clamp(0.42em,0.95vw,0.58em);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${tl};opacity:0.3;">${handle}.com</div>
       </div>
     </div>`;
 
-  // ── 2. Instagram Post (square 1:1) ──────────────────────
-  const social = `
+  // ── 2. Profile Picture / Avatar (1:1) ──────────────────
+  const profile = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:${lc};gap:8%;">
+      <div style="width:48%;aspect-ratio:1/1;border-radius:50%;background:${p};border:3px solid ${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-family:${hF};font-weight:900;font-size:clamp(1.1em,3.5vw,2em);color:${tp};line-height:1;">${initials}</span>
+      </div>
+      <div style="text-align:center;padding:0 8%;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.65em,1.8vw,0.9em);color:${tl};letter-spacing:-0.01em;line-height:1.2;">${brandName}</div>
+        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.55em);color:${tl};opacity:0.45;letter-spacing:0.04em;text-transform:uppercase;margin-top:5%;">${handle}</div>
+      </div>
+    </div>`;
+
+  // ── 3. Instagram Feed Post (square 1:1) ─────────────────
+  const feed = `
     <div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
-      <div style="height:7px;background:${a};flex-shrink:0;"></div>
-      <div style="display:flex;align-items:center;gap:7px;padding:7% 8% 4%;">
-        <div style="width:20px;height:20px;border-radius:50%;background:${p};flex-shrink:0;"></div>
-        <span style="font-family:${bF};font-size:clamp(0.5em,1.2vw,0.65em);font-weight:700;color:${tl};letter-spacing:0.02em;">${brandName.toUpperCase()}</span>
+      <div style="display:flex;align-items:center;gap:7px;padding:6% 7% 3%;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${p};border:1.5px solid ${a};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:${hF};font-size:9px;font-weight:900;color:${tp};">${initials[0]}</span>
+        </div>
+        <span style="font-family:${bF};font-size:clamp(0.48em,1.1vw,0.62em);font-weight:700;color:${tl};letter-spacing:0.02em;">${brandName}</span>
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2% 10%;">
-        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.85em,2.5vw,1.35em);color:${tl};line-height:1.2;letter-spacing:-0.01em;">"${shortTag}"</div>
+      <div style="flex:1;background:${p};display:flex;align-items:center;justify-content:center;padding:8%;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.2vw,1.2em);color:${tp};line-height:1.2;letter-spacing:-0.01em;text-align:center;">${shortTag}</div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:5% 8% 7%;">
-        <div style="width:18px;height:2px;background:${p};border-radius:2px;"></div>
-        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.42em,1vw,0.58em);font-weight:700;padding:4% 9%;border-radius:3px;letter-spacing:0.03em;">Follow →</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4% 7% 6%;">
+        <div style="font-family:${bF};font-size:clamp(0.4em,0.95vw,0.55em);color:${tl};opacity:0.45;">${handle}</div>
+        <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:3% 8%;border-radius:3px;letter-spacing:0.03em;">Follow</div>
       </div>
     </div>`;
 
-  // ── 3. Web Hero (wide 2.4:1) ────────────────────────────
+  // ── 4. Instagram Story (portrait 9:16) ──────────────────
+  const story = `
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:${dc};">
+      <div style="display:flex;align-items:center;gap:7px;padding:7% 6% 4%;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${p};border:2px solid ${a};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:${hF};font-size:9px;font-weight:900;color:${tp};">${initials[0]}</span>
+        </div>
+        <span style="font-family:${bF};font-size:clamp(0.48em,1.2vw,0.62em);font-weight:700;color:${td};letter-spacing:0.02em;">${brandName}</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:6% 8%;">
+        <div style="width:28px;height:3px;background:${a};border-radius:2px;margin-bottom:8%;"></div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.9em,2.8vw,1.5em);color:${td};line-height:1.2;letter-spacing:-0.015em;">${shortTag}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding-bottom:9%;gap:4%;">
+        <div style="font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};">Swipe up ↑</div>
+      </div>
+    </div>`;
+
+  // ── 5. Web Hero (wide 2.4:1) ────────────────────────────
   const hero = `
     <div style="display:flex;width:100%;height:100%;">
       <div style="flex:1.3;background:${dc};display:flex;flex-direction:column;justify-content:center;padding:7% 8%;">
-        <div style="font-family:${bF};font-size:clamp(0.4em,1vw,0.55em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
-        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.75em,2vw,1.15em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
+        <div style="font-family:${bF};font-size:clamp(0.38em,0.95vw,0.52em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.72em,1.9vw,1.1em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:8%;">${shortTag}</div>
         <div style="display:inline-flex;gap:6px;">
-          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
-          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.52em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
+          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:700;padding:4% 10%;border-radius:3px;">Get started</div>
+          <div style="border:1px solid rgba(255,255,255,0.2);color:${td};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.5em);font-weight:600;padding:4% 10%;border-radius:3px;">Learn more</div>
         </div>
       </div>
       <div style="flex:0.7;background:${p};"></div>
     </div>`;
 
-  // ── 4. Email Banner (very wide 4:1) ─────────────────────
+  // ── 6. Email Banner (very wide 4:1) ─────────────────────
   const email = `
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;background:${s};padding:0 5%;">
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
         <div style="width:22px;height:22px;border-radius:4px;background:${p};flex-shrink:0;"></div>
-        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.6em,1.8vw,0.95em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
+        <span style="font-family:${hF};font-weight:${hw};font-size:clamp(0.58em,1.7vw,0.92em);color:${ts};letter-spacing:-0.01em;">${brandName}</span>
       </div>
-      <div style="font-family:${bF};font-size:clamp(0.4em,1.1vw,0.62em);color:${ts};opacity:0.6;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
-      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.38em,0.9vw,0.55em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
-    </div>`;
-
-  // ── 5. Product / Packaging Label (square 1:1) ───────────
-  const label = `
-    <div style="display:flex;flex-direction:column;width:100%;height:100%;background:#fff;">
-      <div style="background:${p};padding:14% 8% 12%;text-align:center;">
-        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.2vw,1.1em);color:${tp};line-height:1.15;letter-spacing:-0.01em;">${brandName}</div>
-      </div>
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8%;">
-        <div style="width:18px;height:18px;border-radius:50%;background:${a};margin-bottom:8%;"></div>
-        <div style="font-family:${bF};font-size:clamp(0.45em,1.1vw,0.62em);color:#444;text-align:center;line-height:1.5;">${shortTag}</div>
-      </div>
-      <div style="height:5px;background:${a};"></div>
+      <div style="font-family:${bF};font-size:clamp(0.38em,1vw,0.6em);color:${ts};opacity:0.55;flex:1;text-align:center;padding:0 5%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${shortTag}</div>
+      <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.36em,0.85vw,0.52em);font-weight:700;padding:5% 10%;border-radius:3px;flex-shrink:0;white-space:nowrap;">Subscribe →</div>
     </div>`;
 
   return `
     <div class="mockup-grid">
-      ${mockupCell('mockup-frame--card',   card,   'Business Card', 'Print / stationery')}
-      ${mockupCell('mockup-frame--social', social, 'Social Post',   'Instagram / LinkedIn')}
-      ${mockupCell('mockup-frame--hero',   hero,   'Web Hero',      'Landing page')}
-      ${mockupCell('mockup-frame--email',  email,  'Email Banner',  'Newsletter header')}
-      ${mockupCell('mockup-frame--label',  label,  'Product Label', 'Packaging / tags')}
+      ${mockupCell('mockup-frame--card',    card,    'Business Card',    'Print / stationery')}
+      ${mockupCell('mockup-frame--profile', profile, 'Profile Picture',  'Instagram / LinkedIn / Google')}
+      ${mockupCell('mockup-frame--feed',    feed,    'Feed Post',        'Instagram / Facebook')}
+      ${mockupCell('mockup-frame--story',   story,   'Instagram Story',  'Stories / Reels cover')}
+      ${mockupCell('mockup-frame--hero',    hero,    'Web Hero',         'Landing page')}
+      ${mockupCell('mockup-frame--email',   email,   'Email Banner',     'Newsletter header')}
     </div>`;
 }
 
@@ -1338,7 +1387,7 @@ function regenSection(section) {
     case 'typography': {
       const newFonts = selectFontPairing(bd, guidance);
       kit.fonts = newFonts;
-      document.getElementById('typography-content').innerHTML = renderTypography(newFonts, bd.brandName);
+      document.getElementById('typography-content').innerHTML = renderTypography(newFonts, { ...bd, taglines: kit.taglines });
       document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...bd, taglines: kit.taglines });
       break;
     }
@@ -1448,7 +1497,7 @@ async function generateKit(brandData) {
   document.getElementById('results-summary').textContent    = brandData.description || '';
 
   document.getElementById('palette-content').innerHTML    = renderPalette(kit.palette);
-  document.getElementById('typography-content').innerHTML = renderTypography(kit.fonts, brandData.brandName);
+  document.getElementById('typography-content').innerHTML = renderTypography(kit.fonts, { ...brandData, taglines: kit.taglines });
   document.getElementById('voice-content').innerHTML      = renderVoice(kit.voice);
   document.getElementById('tagline-content').innerHTML    = renderTagline(kit.taglines, 0);
   document.getElementById('strategy-content').innerHTML   = renderStrategy(kit.strategy);

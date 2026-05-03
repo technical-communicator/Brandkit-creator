@@ -498,26 +498,62 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   position: relative;
   overflow: hidden;
 }
-.swatch-copy {
+/* Color picker — invisible overlay, triggers native color picker on click */
+.swatch-picker {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0);
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+.swatch-copy {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.35);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity var(--transition), background var(--transition);
-  font-size: 11px;
+  transition: opacity var(--transition);
+  font-size: 10px;
   font-weight: 600;
   font-family: var(--font-ui);
+  color: #fff;
+  padding: 3px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1;
 }
-.swatch-block:hover .swatch-copy { opacity: 1; background: rgba(0,0,0,0.25); color: #fff; }
+.swatch-block:hover .swatch-copy { opacity: 1; pointer-events: auto; }
+/* Tooltip hint on hover */
+.swatch-block::after {
+  content: '✎ adjust';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  color: rgba(255,255,255,0.9);
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.swatch-block:hover::after { opacity: 1; }
 .swatch-info {}
 .swatch-hex { font-size: 13px; font-weight: 700; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-primary); }
 .swatch-role { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .swatch-usage { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin-top: 4px; }
+
+.palette-picker-hint { display: block; margin-top: 4px; color: var(--text-muted); font-style: italic; }
 
 .palette-note {
   margin-top: 20px;
@@ -626,7 +662,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   transition: border-color var(--transition), background var(--transition);
 }
 .tagline-variant:hover { border-color: var(--border); }
-.tagline-variant.selected { border-color: var(--accent); background: var(--surface); }
+@keyframes taglinePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(26,26,24,0.35); }
+  60%  { box-shadow: 0 0 0 5px rgba(26,26,24,0); }
+  100% { box-shadow: 0 0 0 0 rgba(26,26,24,0); }
+}
+.tagline-variant.selected {
+  border-color: var(--accent);
+  background: var(--surface);
+  animation: taglinePulse 500ms ease;
+}
 .tagline-variant-text { flex: 1; font-size: 14px; color: var(--text-primary); font-weight: 500; }
 .tagline-variant-type { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); flex-shrink: 0; }
 .tagline-select-btn {
@@ -651,18 +696,22 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .kit-section--mockup { overflow: visible; }
 .section-content--flush { padding: 0; }
 
+/*
+  6-cell grid layout:
+  Row 1: Card (1) | Profile (2) | Feed (3)
+  Row 2: Story (4, col 1) | Hero (5, cols 2-3)
+  Row 3: Email (6, full width)
+*/
 .mockup-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 2fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 3px;
   background: var(--border-light);
   border-radius: 0 0 var(--radius) var(--radius);
   overflow: hidden;
 }
-/* Row 2 spans differently */
-.mockup-cell:nth-child(4) { grid-column: 1 / 3; }
-.mockup-cell:nth-child(5) { grid-column: 3 / 4; }
+.mockup-cell:nth-child(5) { grid-column: 2 / 4; }
+.mockup-cell:nth-child(6) { grid-column: 1 / 4; }
 
 .mockup-cell { background: var(--surface); overflow: hidden; }
 .mockup-frame {
@@ -672,10 +721,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 }
 /* Aspect ratios per context */
 .mockup-frame--card    { aspect-ratio: 1.6 / 1; }
-.mockup-frame--social  { aspect-ratio: 1 / 1; }
+.mockup-frame--profile { aspect-ratio: 1 / 1; }
+.mockup-frame--feed    { aspect-ratio: 1 / 1; }
+.mockup-frame--story   { aspect-ratio: 9 / 16; }
 .mockup-frame--hero    { aspect-ratio: 2.4 / 1; }
 .mockup-frame--email   { aspect-ratio: 4 / 1; }
-.mockup-frame--label   { aspect-ratio: 1 / 1; }
 
 .mockup-meta {
   padding: 8px 12px 10px;
@@ -698,15 +748,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 @media (max-width: 700px) {
   .mockup-grid { grid-template-columns: 1fr 1fr; }
-  .mockup-cell:nth-child(3) { grid-column: 1 / 3; }
-  .mockup-cell:nth-child(4) { grid-column: 1 / 3; }
-  .mockup-cell:nth-child(5) { grid-column: 1 / 3; }
+  .mockup-cell:nth-child(5),
+  .mockup-cell:nth-child(6) { grid-column: 1 / 3; }
   .mockup-frame--hero  { aspect-ratio: 2 / 1; }
   .mockup-frame--email { aspect-ratio: 3 / 1; }
 }
 @media (max-width: 480px) {
-  .mockup-grid { grid-template-columns: 1fr; }
-  .mockup-cell:nth-child(n) { grid-column: 1; }
+  .mockup-grid { grid-template-columns: 1fr 1fr; }
+  .mockup-cell:nth-child(4) { grid-column: 1 / 1; }
+  .mockup-cell:nth-child(5),
+  .mockup-cell:nth-child(6) { grid-column: 1 / 3; }
 }
 
 /* ── Content Strategy Section ──────────────────────────────── */
