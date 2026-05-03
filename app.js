@@ -1215,6 +1215,9 @@ function renderWordmark(wmData) {
           <button class="wm-action-btn" onclick="regenWordmarkCard('${id}')" title="New style variant">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>
           </button>
+          <button class="wm-action-btn wm-action-btn--edit" onclick="toggleWordmarkEdit('${id}')" title="Edit — drag elements">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M11 2.5l2.5 2.5-7 7-3 .5.5-3 7-7zM10 3.5l2.5 2.5"/></svg>
+          </button>
           <button class="wm-action-btn" onclick="downloadWordmarkSvg('${id}')" title="Download SVG">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v8m0 0L5 8m3 3l3-3M3 13h10"/></svg>
           </button>
@@ -1510,7 +1513,10 @@ function mockupCell(frameClass, innerHtml, label, context, cellId, extraClass = 
         <button class="mockup-action-btn" onclick="regenMockupCell('${cellId}')" title="Remix — try a different layout">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>
         </button>
-        <button class="mockup-action-btn mockup-action-btn--code" onclick="showCodeSnippet('${cellId}')" title="Download code snippet">
+        <button class="mockup-action-btn mockup-action-btn--edit" onclick="toggleCellEdit('${cellId}')" title="Edit — drag &amp; resize elements">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 2.5l2.5 2.5-7 7-3 .5.5-3 7-7zM10 3.5l2.5 2.5"/></svg>
+        </button>
+        <button class="mockup-action-btn mockup-action-btn--code" onclick="showCodeSnippet('${cellId}')" title="Get code snippet">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5M9.5 3l-3 10"/></svg>
         </button>
       </div>
@@ -1916,7 +1922,8 @@ let _snippetCode   = '';
 
 function showCodeSnippet(cellId) {
   _snippetCellId = cellId;
-  _snippetCode   = generateSnippetHTML(cellId);
+  const hasEdits = (kit.mockupEdits[cellId] || []).some(e => e && (e.tx || e.ty || e.w || e.h));
+  _snippetCode   = hasEdits ? generateEditedSnippetHTML(cellId) : generateSnippetHTML(cellId);
   const labels   = { card: 'Business Card', profile: 'Profile Picture', feed: 'Feed Post', story: 'Story / Reel', hero: 'Hero Section', email: 'Email Banner', 'yt-thumb': 'YouTube Thumbnail', 'yt-banner': 'Channel Art', 'web-card': 'Feature Card' };
   const contexts = { card: 'Print / stationery', profile: 'Social · circle crop', feed: 'Instagram · Facebook', story: 'Stories · Reels · Shorts', hero: 'Above the fold · full width', email: 'Newsletter header / CTA strip', 'yt-thumb': 'Widescreen · 1280×720px', 'yt-banner': 'Banner · 2560×1440px', 'web-card': 'Content section component' };
   document.getElementById('code-modal-title').textContent   = labels[cellId]   || cellId;
@@ -2650,6 +2657,8 @@ const kit = {
   mockupVariants:   null,
   mockupPlatform:   'instagram',
   wordmarkVariants: null,
+  mockupEdits:      {},
+  wordmarkEdits:    {},
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -3341,3 +3350,348 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+/* ─────────────────────────────────────────────────────────────
+   INTERACTIVE EDITING — drag, resize & reposition
+   Works for both mockup cells (HTML) and wordmark cards (SVG).
+   Drag applies transform:translate (preserves flex flow).
+   Resize sets explicit width/height (flex:none).
+   Edits persist in kit.mockupEdits / kit.wordmarkEdits and are
+   included verbatim when exporting the code snippet.
+   ───────────────────────────────────────────────────────────── */
+
+let _editMode = { type: null, id: null }; // 'cell' | 'wordmark'
+let _selEl    = null;                      // currently selected editable element
+let _dragOp   = null;                      // active drag/resize operation
+
+// ── Toggle entry points ───────────────────────────────────────
+
+function toggleCellEdit(cellId) {
+  if (_editMode.type === 'cell' && _editMode.id === cellId) { _exitEdit(); return; }
+  _exitEdit();
+  _enterCellEdit(cellId);
+}
+
+function toggleWordmarkEdit(cardId) {
+  if (_editMode.type === 'wordmark' && _editMode.id === cardId) { _exitEdit(); return; }
+  _exitEdit();
+  _enterWordmarkEdit(cardId);
+}
+
+// ── Enter edit — HTML cell ────────────────────────────────────
+
+function _enterCellEdit(cellId) {
+  const cellEl = document.getElementById(`mockup-cell-${cellId}`);
+  const frame  = cellEl?.querySelector('.mockup-frame');
+  const container = frame?.firstElementChild;
+  if (!container) return;
+
+  _editMode = { type: 'cell', id: cellId };
+  cellEl.classList.add('cell-editing');
+
+  const layers = _getHtmlLayers(container);
+  const stored = kit.mockupEdits[cellId] || [];
+
+  layers.forEach((el, i) => {
+    el.classList.add('editable-layer');
+    el.dataset.layerIdx = String(i);
+    const sv = stored[i] || {};
+    if (sv.tx || sv.ty) el.style.transform = `translate(${sv.tx || 0}px,${sv.ty || 0}px)`;
+    if (sv.w)  { el.style.flex = 'none'; el.style.width  = sv.w + 'px'; }
+    if (sv.h)  { el.style.flex = 'none'; el.style.height = sv.h + 'px'; }
+  });
+
+  frame.addEventListener('pointerdown', _onEditPointerDown);
+  document.addEventListener('keydown', _onEditKeyDown);
+  _attachDoneBtn(cellEl);
+}
+
+function _getHtmlLayers(container) {
+  let candidates = Array.from(container.children)
+    .filter(el => !el.classList.contains('resize-handle') && el.offsetWidth > 8 && el.offsetHeight > 8);
+  if (candidates.length === 1) {
+    const deeper = Array.from(candidates[0].children)
+      .filter(el => el.offsetWidth > 8 && el.offsetHeight > 8);
+    if (deeper.length >= 2) return deeper;
+  }
+  return candidates.length ? candidates : [container];
+}
+
+// ── Enter edit — SVG wordmark ─────────────────────────────────
+
+function _enterWordmarkEdit(cardId) {
+  const cardEl = document.getElementById(`wm-card-${cardId}`);
+  const svg    = cardEl?.querySelector('svg');
+  if (!svg) return;
+
+  _editMode = { type: 'wordmark', id: cardId };
+  cardEl.classList.add('cell-editing');
+
+  const layers = _getSvgLayers(svg);
+  const stored = kit.wordmarkEdits[cardId] || [];
+
+  layers.forEach((el, i) => {
+    el.classList.add('editable-layer');
+    el.dataset.layerIdx = String(i);
+    const sv = stored[i] || {};
+    if (sv.tx || sv.ty) el.setAttribute('transform', `translate(${sv.tx || 0} ${sv.ty || 0})`);
+  });
+
+  svg.addEventListener('pointerdown', _onEditPointerDown);
+  document.addEventListener('keydown', _onEditKeyDown);
+  _attachDoneBtn(cardEl);
+}
+
+function _getSvgLayers(svg) {
+  const vw = parseFloat(svg.getAttribute('viewBox')?.split(' ')[2]) || 480;
+  const vh = parseFloat(svg.getAttribute('viewBox')?.split(' ')[3]) || 160;
+  return Array.from(svg.children).filter(el => {
+    if (el.tagName === 'rect') {
+      const w = parseFloat(el.getAttribute('width'));
+      const h = parseFloat(el.getAttribute('height'));
+      if (Math.abs(w - vw) < 2 && Math.abs(h - vh) < 2) return false; // skip bg rect
+    }
+    return true;
+  });
+}
+
+// ── Done button ───────────────────────────────────────────────
+
+function _attachDoneBtn(parentEl) {
+  const btn = document.createElement('button');
+  btn.className = 'cell-edit-done-btn';
+  btn.textContent = 'Done';
+  btn.onclick = _exitEdit;
+  parentEl.prepend(btn);
+}
+
+// ── Exit edit ─────────────────────────────────────────────────
+
+function _exitEdit() {
+  if (!_editMode.type) return;
+  const { type, id } = _editMode;
+
+  if (type === 'cell') {
+    const cellEl = document.getElementById(`mockup-cell-${id}`);
+    if (cellEl) {
+      _saveCellEdits(id);
+      cellEl.querySelectorAll('.editable-layer').forEach(el => {
+        el.classList.remove('editable-layer', 'layer-selected');
+        el.querySelectorAll('.resize-handle').forEach(h => h.remove());
+        delete el.dataset.layerIdx;
+      });
+      cellEl.classList.remove('cell-editing');
+      cellEl.querySelector('.cell-edit-done-btn')?.remove();
+      cellEl.querySelector('.mockup-frame')?.removeEventListener('pointerdown', _onEditPointerDown);
+    }
+  } else if (type === 'wordmark') {
+    const cardEl = document.getElementById(`wm-card-${id}`);
+    if (cardEl) {
+      _saveWordmarkEdits(id);
+      cardEl.querySelector('svg')?.removeEventListener('pointerdown', _onEditPointerDown);
+      cardEl.querySelectorAll('.editable-layer').forEach(el => {
+        el.classList.remove('editable-layer', 'layer-selected');
+        delete el.dataset.layerIdx;
+      });
+      cardEl.classList.remove('cell-editing');
+      cardEl.querySelector('.cell-edit-done-btn')?.remove();
+    }
+  }
+
+  _deselectEl();
+  document.removeEventListener('keydown', _onEditKeyDown);
+  _editMode = { type: null, id: null };
+}
+
+function _saveCellEdits(cellId) {
+  const cellEl = document.getElementById(`mockup-cell-${cellId}`);
+  if (!cellEl) return;
+  const saved = [];
+  cellEl.querySelectorAll('.editable-layer').forEach((el, i) => {
+    const mat = new DOMMatrix(getComputedStyle(el).transform);
+    saved[i] = {
+      tx: Math.round(mat.m41) || 0,
+      ty: Math.round(mat.m42) || 0,
+      w:  el.style.width  ? Math.round(parseFloat(el.style.width))  : null,
+      h:  el.style.height ? Math.round(parseFloat(el.style.height)) : null,
+    };
+  });
+  kit.mockupEdits[cellId] = saved;
+}
+
+function _saveWordmarkEdits(cardId) {
+  const cardEl = document.getElementById(`wm-card-${cardId}`);
+  if (!cardEl) return;
+  const saved = [];
+  cardEl.querySelectorAll('.editable-layer').forEach((el, i) => {
+    const tfm = el.getAttribute('transform') || '';
+    const m = tfm.match(/translate\(\s*([-\d.]+)[\s,]+([-\d.]+)\s*\)/);
+    saved[i] = { tx: m ? Math.round(+m[1]) : 0, ty: m ? Math.round(+m[2]) : 0 };
+  });
+  kit.wordmarkEdits[cardId] = saved;
+}
+
+// ── Selection ─────────────────────────────────────────────────
+
+function _selectEl(el) {
+  _deselectEl();
+  _selEl = el;
+  el.classList.add('layer-selected');
+  if (_editMode.type === 'cell') {
+    ['nw', 'ne', 'sw', 'se'].forEach(dir => {
+      const h = document.createElement('div');
+      h.className = `resize-handle resize-handle--${dir}`;
+      h.dataset.resizeDir = dir;
+      el.appendChild(h);
+    });
+  }
+}
+
+function _deselectEl() {
+  if (!_selEl) return;
+  _selEl.classList.remove('layer-selected');
+  _selEl.querySelectorAll('.resize-handle').forEach(h => h.remove());
+  _selEl = null;
+}
+
+// ── Pointer events ────────────────────────────────────────────
+
+function _onEditPointerDown(e) {
+  const handle = e.target.closest('.resize-handle');
+  if (handle && _selEl) {
+    e.stopPropagation(); e.preventDefault();
+    _startResize(e, _selEl, handle.dataset.resizeDir);
+    return;
+  }
+  const layer = e.target.closest('.editable-layer');
+  if (layer) {
+    e.stopPropagation();
+    if (_selEl !== layer) _selectEl(layer);
+    _startDrag(e, layer);
+    return;
+  }
+  _deselectEl();
+}
+
+function _startDrag(e, el) {
+  const isSvg = _editMode.type === 'wordmark';
+  let origTx = 0, origTy = 0;
+  if (isSvg) {
+    const m = (el.getAttribute('transform') || '').match(/translate\(\s*([-\d.]+)[\s,]+([-\d.]+)\s*\)/);
+    if (m) { origTx = +m[1]; origTy = +m[2]; }
+  } else {
+    const mat = new DOMMatrix(getComputedStyle(el).transform);
+    origTx = mat.m41; origTy = mat.m42;
+  }
+  _dragOp = { type: 'drag', el, isSvg, startX: e.clientX, startY: e.clientY, origTx, origTy };
+  document.addEventListener('pointermove', _onEditPointerMove);
+  document.addEventListener('pointerup',   _onEditPointerUp, { once: true });
+  e.preventDefault();
+}
+
+function _startResize(e, el, dir) {
+  _dragOp = { type: 'resize', el, dir, startX: e.clientX, startY: e.clientY, origW: el.offsetWidth, origH: el.offsetHeight };
+  document.addEventListener('pointermove', _onEditPointerMove);
+  document.addEventListener('pointerup',   _onEditPointerUp, { once: true });
+  e.preventDefault();
+}
+
+function _onEditPointerMove(e) {
+  if (!_dragOp) return;
+  const dx = e.clientX - _dragOp.startX;
+  const dy = e.clientY - _dragOp.startY;
+
+  if (_dragOp.type === 'drag') {
+    const tx = _dragOp.origTx + dx;
+    const ty = _dragOp.origTy + dy;
+    if (_dragOp.isSvg) {
+      _dragOp.el.setAttribute('transform', `translate(${Math.round(tx)} ${Math.round(ty)})`);
+    } else {
+      _dragOp.el.style.transform = `translate(${Math.round(tx)}px,${Math.round(ty)}px)`;
+    }
+  } else {
+    const { dir, origW, origH, el } = _dragOp;
+    const newW = Math.max(24, origW + (dir.includes('e') ? dx : -dx));
+    const newH = Math.max(12, origH + (dir.includes('s') ? dy : -dy));
+    el.style.flex      = 'none';
+    el.style.minWidth  = '0';
+    el.style.minHeight = '0';
+    el.style.width     = newW + 'px';
+    el.style.height    = newH + 'px';
+  }
+}
+
+function _onEditPointerUp() {
+  document.removeEventListener('pointermove', _onEditPointerMove);
+  _dragOp = null;
+}
+
+function _onEditKeyDown(e) {
+  if (e.key === 'Escape') _exitEdit();
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') && _selEl) {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    const isSvg = _editMode.type === 'wordmark';
+    let tx = 0, ty = 0;
+    if (isSvg) {
+      const m = (_selEl.getAttribute('transform') || '').match(/translate\(\s*([-\d.]+)[\s,]+([-\d.]+)\s*\)/);
+      if (m) { tx = +m[1]; ty = +m[2]; }
+    } else {
+      const mat = new DOMMatrix(getComputedStyle(_selEl).transform);
+      tx = mat.m41; ty = mat.m42;
+    }
+    if (e.key === 'ArrowLeft')  tx -= step;
+    if (e.key === 'ArrowRight') tx += step;
+    if (e.key === 'ArrowUp')    ty -= step;
+    if (e.key === 'ArrowDown')  ty += step;
+    if (isSvg) {
+      _selEl.setAttribute('transform', `translate(${Math.round(tx)} ${Math.round(ty)})`);
+    } else {
+      _selEl.style.transform = `translate(${Math.round(tx)}px,${Math.round(ty)}px)`;
+    }
+  }
+}
+
+// ── Code export — live DOM serialisation ──────────────────────
+
+function generateEditedSnippetHTML(cellId) {
+  const frame = document.querySelector(`#mockup-cell-${cellId} .mockup-frame`);
+  if (!frame) return generateSnippetHTML(cellId);
+
+  const clone = frame.cloneNode(true);
+  clone.querySelectorAll('.resize-handle, .cell-edit-done-btn').forEach(el => el.remove());
+  clone.querySelectorAll('.editable-layer').forEach(el => {
+    el.classList.remove('editable-layer', 'layer-selected');
+    delete el.dataset.layerIdx;
+  });
+
+  const p  = kit.palette?.primary.hex   || '#000';
+  const lc = kit.palette?.light.hex     || '#fff';
+  const hf = kit.fonts?.heading         || 'Inter';
+  const bf = kit.fonts?.body            || 'Inter';
+  const gf = [...new Set([hf, bf])].map(f => `family=${encodeURIComponent(f)}:wght@400;500;700;900`).join('&');
+
+  const labels   = { card: 'Business Card', profile: 'Profile Picture', feed: 'Feed Post', story: 'Story / Reel', hero: 'Hero Section', email: 'Email Banner', 'yt-thumb': 'YouTube Thumbnail', 'yt-banner': 'Channel Art', 'web-card': 'Feature Card' };
+  const title    = labels[cellId] || cellId;
+  const innerHtml = clone.outerHTML;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?${gf}&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: ${lc}; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .mockup-frame { width: 100%; max-width: 640px; overflow: hidden; }
+  </style>
+</head>
+<body>
+${innerHtml}
+</body>
+</html>`;
+}
