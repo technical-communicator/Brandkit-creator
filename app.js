@@ -1398,6 +1398,70 @@ function downloadWordmarkSvg(cardId) {
 async function downloadWordmark(variantId) { downloadWordmarkSvg(variantId); }
 
 /* ─────────────────────────────────────────────────────────────
+   16a. MOCKUP — PLATFORM GROUPS
+   ───────────────────────────────────────────────────────────── */
+
+// Each platform entry defines which cells to render and their display labels
+const PLATFORM_GROUPS = {
+  instagram: {
+    label: 'Instagram',
+    cells: [
+      { id: 'feed',    frame: 'mockup-frame--feed',    label: 'Feed Post',       context: 'Square · 1080×1080px' },
+      { id: 'story',   frame: 'mockup-frame--story',   label: 'Story / Reel',    context: 'Vertical · 1080×1920px' },
+      { id: 'profile', frame: 'mockup-frame--profile', label: 'Profile Picture', context: 'Circle crop · 400×400px' },
+    ],
+    grid: 'mockup-grid--3col',
+  },
+  youtube: {
+    label: 'YouTube',
+    cells: [
+      { id: 'yt-thumb',  frame: 'mockup-frame--yt-thumb',  label: 'Video Thumbnail', context: 'Widescreen · 1280×720px' },
+      { id: 'story',     frame: 'mockup-frame--story',     label: 'YouTube Shorts',  context: 'Vertical · 1080×1920px' },
+      { id: 'profile',   frame: 'mockup-frame--profile',   label: 'Channel Icon',    context: 'Circle · 800×800px' },
+      { id: 'yt-banner', frame: 'mockup-frame--yt-banner', label: 'Channel Art',     context: 'Banner · 2560×1440px', wide: true },
+    ],
+    grid: 'mockup-grid--3col',
+  },
+  tiktok: {
+    label: 'TikTok',
+    cells: [
+      { id: 'story',   frame: 'mockup-frame--story',   label: 'TikTok Video',    context: 'Vertical · 1080×1920px' },
+      { id: 'profile', frame: 'mockup-frame--profile', label: 'Profile Picture', context: 'Circle · 200×200px' },
+    ],
+    grid: 'mockup-grid--2col',
+  },
+  website: {
+    label: 'Website',
+    cells: [
+      { id: 'hero',     frame: 'mockup-frame--hero',     label: 'Hero Section', context: 'Above the fold · full width', wide: true },
+      { id: 'web-card', frame: 'mockup-frame--web-card', label: 'Feature Card', context: 'Content section component',   wide: true },
+      { id: 'email',    frame: 'mockup-frame--email',    label: 'CTA Strip',    context: 'In-page conversion banner',   wide: true },
+    ],
+    grid: 'mockup-grid--1col',
+  },
+  print: {
+    label: 'Print & Email',
+    cells: [
+      { id: 'card',  frame: 'mockup-frame--card',  label: 'Business Card', context: '3.5×2 in standard' },
+      { id: 'email', frame: 'mockup-frame--email', label: 'Email Banner',  context: '600px newsletter header', wide: true },
+    ],
+    grid: 'mockup-grid--2col',
+  },
+};
+
+function switchMockupPlatform(platformId) {
+  kit.mockupPlatform = platformId;
+  // Reset variants for the new platform so fresh layouts are picked
+  kit.mockupVariants = null;
+  document.querySelectorAll('.platform-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.platform === platformId);
+  });
+  document.getElementById('mockup-content').innerHTML = renderMockup(
+    kit.palette, kit.fonts, { ...kit.brandData, taglines: kit.taglines }
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    16b. MOCKUP — INDUSTRY BIAS + COPY TABLES
    ───────────────────────────────────────────────────────────── */
 
@@ -1438,12 +1502,12 @@ const MOCKUP_COPY = {
 };
 const DEFAULT_COPY = { cta1: 'Get started', cta2: 'Learn more', cta3: 'Explore', subscribe: 'Subscribe', story_cta: 'Learn more' };
 
-function mockupCell(frameClass, innerHtml, label, context, cellId) {
+function mockupCell(frameClass, innerHtml, label, context, cellId, extraClass = '') {
   return `
-    <div class="mockup-cell" id="mockup-cell-${cellId}">
+    <div class="mockup-cell${extraClass}" id="mockup-cell-${cellId}">
       <div class="mockup-frame ${frameClass}">${innerHtml}</div>
       <div class="mockup-cell-actions">
-        <button class="mockup-action-btn" onclick="regenMockupCell('${cellId}')" title="New layout variant">
+        <button class="mockup-action-btn" onclick="regenMockupCell('${cellId}')" title="Remix — try a different layout">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>
         </button>
         <button class="mockup-action-btn mockup-action-btn--code" onclick="showCodeSnippet('${cellId}')" title="Download code snippet">
@@ -1474,13 +1538,19 @@ function renderMockup(palette, fonts, brandData) {
   const pv   = kit.mockupVariants || {};
   const bias = MOCKUP_INDUSTRY_BIAS[industry] || {};
   const fresh = Object.keys(pv).length === 0;
-  const vCard    = pv.card    ?? (fresh ? (bias.card    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
-  const vProfile = pv.profile ?? (fresh ? (bias.profile ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
-  const vFeed    = pv.feed    ?? (fresh ? (bias.feed    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
-  const vStory   = pv.story   ?? (fresh ? (bias.story   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
-  const vHero    = pv.hero    ?? (fresh ? (bias.hero    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
-  const vEmail   = pv.email   ?? (fresh ? (bias.email   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
-  kit.mockupVariants = { card: vCard, profile: vProfile, feed: vFeed, story: vStory, hero: vHero, email: vEmail };
+  const vCard     = pv.card        ?? (fresh ? (bias.card    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vProfile  = pv.profile     ?? (fresh ? (bias.profile ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
+  const vFeed     = pv.feed        ?? (fresh ? (bias.feed    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vStory    = pv.story       ?? (fresh ? (bias.story   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
+  const vHero     = pv.hero        ?? (fresh ? (bias.hero    ?? Math.floor(Math.random() * 3)) : Math.floor(Math.random() * 3));
+  const vEmail    = pv.email       ?? (fresh ? (bias.email   ?? Math.floor(Math.random() * 2)) : Math.floor(Math.random() * 2));
+  const vYtThumb  = pv['yt-thumb']  ?? Math.floor(Math.random() * 3);
+  const vYtBanner = pv['yt-banner'] ?? Math.floor(Math.random() * 2);
+  const vWebCard  = pv['web-card']  ?? Math.floor(Math.random() * 3);
+  kit.mockupVariants = {
+    card: vCard, profile: vProfile, feed: vFeed, story: vStory, hero: vHero, email: vEmail,
+    'yt-thumb': vYtThumb, 'yt-banner': vYtBanner, 'web-card': vWebCard,
+  };
   const tp = textOnBg(p);
   const ts = textOnBg(s);
   const tl = textOnBg(lc);
@@ -1694,15 +1764,133 @@ function renderMockup(palette, fonts, brandData) {
   ];
   const email = emailVariants[vEmail];
 
-  return `
-    <div class="mockup-grid">
-      ${mockupCell('mockup-frame--card',    card,    'Business Card',    'Print / stationery',              'card')}
-      ${mockupCell('mockup-frame--profile', profile, 'Profile Picture',  'Instagram · LinkedIn · Google',   'profile')}
-      ${mockupCell('mockup-frame--feed',    feed,    'Feed Post',        'Instagram · Facebook',            'feed')}
-      ${mockupCell('mockup-frame--story',   story,   'Instagram Story',  'Stories · Reels cover',           'story')}
-      ${mockupCell('mockup-frame--hero',    hero,    'Web Hero',         'Landing page',                    'hero')}
-      ${mockupCell('mockup-frame--email',   email,   'Email Banner',     'Newsletter header',               'email')}
-    </div>`;
+  // ── 7. YouTube Thumbnail (16:9) — 3 variants ────────────
+  const ytThumbVariants = [
+    // V0: Dark punchy — bold brand name, subtitle, corner accent
+    `<div style="display:flex;width:100%;height:100%;background:${dc};position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${a};"></div>
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;padding:7% 8% 7% 10%;flex:1;">
+        <div style="font-family:${bF};font-size:clamp(0.32em,0.75vw,0.45em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:4%;">${brandName}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2vw,1.15em);color:${td};line-height:1.15;letter-spacing:-0.01em;">${shortTag}</div>
+      </div>
+      <div style="flex:0.4;background:${p};display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:${hF};font-size:clamp(1.2em,3.5vw,2.2em);font-weight:900;color:${tp};opacity:0.9;">${initials}</span>
+      </div>
+    </div>`,
+    // V1: Bright / energetic — primary bg, large white text, brand strip
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${p};">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8% 10%;text-align:center;">
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.85em,2.2vw,1.3em);color:${tp};line-height:1.15;letter-spacing:-0.015em;margin-bottom:6%;">${shortTag}</div>
+        <div style="width:32px;height:3px;background:${a};border-radius:2px;opacity:0.8;"></div>
+      </div>
+      <div style="background:${dc};padding:3% 6%;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:${bF};font-size:clamp(0.32em,0.75vw,0.44em);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${td};opacity:0.6;">${brandName}</span>
+        <span style="font-family:${bF};font-size:clamp(0.3em,0.7vw,0.42em);color:${a};font-weight:700;">${copy.cta1} →</span>
+      </div>
+    </div>`,
+    // V2: Clean minimal — light bg, editorial layout with accent border
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
+      <div style="height:4px;background:${a};"></div>
+      <div style="flex:1;display:flex;align-items:center;gap:6%;padding:6% 8%;">
+        <div style="width:56px;height:56px;border-radius:10px;background:${p};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-family:${hF};font-size:clamp(0.8em,2.2vw,1.3em);font-weight:900;color:${tp};">${initials}</span>
+        </div>
+        <div>
+          <div style="font-family:${bF};font-size:clamp(0.3em,0.7vw,0.42em);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${tl};opacity:0.4;margin-bottom:5%;">${brandName}</div>
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.7em,1.8vw,1.05em);color:${tl};line-height:1.2;letter-spacing:-0.01em;">${shortTag}</div>
+        </div>
+      </div>
+    </div>`,
+  ];
+  const ytThumb = ytThumbVariants[vYtThumb];
+
+  // ── 8. YouTube Channel Art (very wide ~5.3:1) — 2 variants ─
+  const ytBannerVariants = [
+    // V0: Two-tone split — dark left, primary right, centred identity
+    `<div style="display:flex;width:100%;height:100%;">
+      <div style="flex:1;background:${dc};display:flex;align-items:center;justify-content:flex-end;padding-right:4%;">
+        <div style="text-align:right;">
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.8em,2.2vw,1.3em);color:${td};letter-spacing:-0.02em;line-height:1.1;">${brandName}</div>
+          <div style="font-family:${bF};font-size:clamp(0.3em,0.75vw,0.45em);color:${td};opacity:0.4;margin-top:5%;letter-spacing:0.05em;">${shortTag}</div>
+        </div>
+      </div>
+      <div style="width:3px;background:${a};flex-shrink:0;"></div>
+      <div style="flex:1;background:${p};display:flex;align-items:center;padding-left:4%;">
+        <div>
+          <div style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${tp};opacity:0.6;margin-bottom:6%;">New videos every week</div>
+          <div style="background:${a};color:${ta};font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;padding:6% 14%;border-radius:3px;display:inline-block;">${copy.subscribe} →</div>
+        </div>
+      </div>
+    </div>`,
+    // V1: Full-width centred — accent strip top, brand name large centre
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${lc};">
+      <div style="height:5px;background:${a};flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:${p};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-family:${hF};font-size:12px;font-weight:900;color:${tp};">${initials[0]}</span>
+          </div>
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.85em,2.2vw,1.35em);color:${tl};letter-spacing:-0.02em;">${brandName}</div>
+        </div>
+        <div style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.4em);color:${tl};opacity:0.38;letter-spacing:0.07em;text-transform:uppercase;">${shortTag}</div>
+      </div>
+      <div style="height:5px;background:${p};flex-shrink:0;opacity:0.18;"></div>
+    </div>`,
+  ];
+  const ytBanner = ytBannerVariants[vYtBanner];
+
+  // ── 9. Web Feature Card (landscape 2:1) — 3 variants ────
+  const webCardVariants = [
+    // V0: Light card — icon block, heading, description, CTA link
+    `<div style="display:flex;width:100%;height:100%;background:${lc};">
+      <div style="flex:0.45;background:${p};display:flex;align-items:center;justify-content:center;">
+        <div style="width:44px;height:44px;border-radius:10px;background:${a};opacity:0.9;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:7% 9%;">
+        <div style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.68em,1.7vw,0.96em);color:${tl};line-height:1.2;letter-spacing:-0.01em;margin-bottom:6%;">${shortTag}</div>
+        <div style="font-family:${bF};font-size:clamp(0.3em,0.7vw,0.42em);font-weight:700;color:${a};">${copy.cta1} →</div>
+      </div>
+    </div>`,
+    // V1: Dark card — accent top border, light text, outlined button
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${dc};">
+      <div style="height:3px;background:${a};flex-shrink:0;"></div>
+      <div style="flex:1;display:flex;align-items:center;gap:6%;padding:6% 8%;">
+        <div style="flex:1;">
+          <div style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${a};margin-bottom:5%;">${brandName}</div>
+          <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.68em,1.7vw,0.96em);color:${td};line-height:1.2;letter-spacing:-0.01em;margin-bottom:7%;">${shortTag}</div>
+          <div style="border:1px solid ${a};color:${a};font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;padding:4% 10%;border-radius:3px;display:inline-block;">${copy.cta2}</div>
+        </div>
+        <div style="flex:0.35;aspect-ratio:1;border-radius:10px;background:${p};opacity:0.3;"></div>
+      </div>
+    </div>`,
+    // V2: Secondary bg — minimal, tagline centred, brand strip footer
+    `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:${s};">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6% 12%;text-align:center;">
+        <div style="width:20px;height:2px;background:${a};border-radius:2px;margin-bottom:7%;opacity:0.7;"></div>
+        <div style="font-family:${hF};font-weight:${hw};font-size:clamp(0.68em,1.7vw,0.96em);color:${ts};line-height:1.2;letter-spacing:-0.01em;">${shortTag}</div>
+        <div style="width:20px;height:2px;background:${a};border-radius:2px;margin-top:7%;opacity:0.7;"></div>
+      </div>
+      <div style="background:${p};padding:4% 8%;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${tp};opacity:0.75;">${brandName}</span>
+        <span style="font-family:${bF};font-size:clamp(0.28em,0.65vw,0.38em);color:${tp};opacity:0.5;">${copy.cta1} →</span>
+      </div>
+    </div>`,
+  ];
+  const webCard = webCardVariants[vWebCard];
+
+  // ── Platform-driven render ───────────────────────────────
+  const platform = PLATFORM_GROUPS[kit.mockupPlatform] || PLATFORM_GROUPS.instagram;
+  const cellHtmlMap = {
+    card: card, profile: profile, feed: feed, story: story,
+    hero: hero, email: email,
+    'yt-thumb': ytThumb, 'yt-banner': ytBanner, 'web-card': webCard,
+  };
+  const platformCells = platform.cells.map(c =>
+    mockupCell(c.frame, cellHtmlMap[c.id] || '', c.label, c.context, c.id, c.wide ? ' mockup-cell--wide' : '')
+  ).join('');
+
+  return `<div class="mockup-grid ${platform.grid}">${platformCells}</div>`;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1711,7 +1899,7 @@ function renderMockup(palette, fonts, brandData) {
 
 function regenMockupCell(cellId) {
   if (!kit.palette || !kit.fonts || !kit.brandData) return;
-  const counts = { card: 3, profile: 2, feed: 3, story: 2, hero: 3, email: 2 };
+  const counts = { card: 3, profile: 2, feed: 3, story: 2, hero: 3, email: 2, 'yt-thumb': 3, 'yt-banner': 2, 'web-card': 3 };
   const count  = counts[cellId] ?? 2;
   const current = (kit.mockupVariants || {})[cellId] ?? 0;
   let next = Math.floor(Math.random() * count);
@@ -1729,8 +1917,8 @@ let _snippetCode   = '';
 function showCodeSnippet(cellId) {
   _snippetCellId = cellId;
   _snippetCode   = generateSnippetHTML(cellId);
-  const labels   = { card: 'Business Card', profile: 'Profile Picture', feed: 'Feed Post', story: 'Instagram Story', hero: 'Web Hero', email: 'Email Banner' };
-  const contexts = { card: 'Print / stationery', profile: 'Instagram · LinkedIn · Google', feed: 'Instagram · Facebook', story: 'Stories · Reels cover', hero: 'Landing page', email: 'Newsletter header' };
+  const labels   = { card: 'Business Card', profile: 'Profile Picture', feed: 'Feed Post', story: 'Story / Reel', hero: 'Hero Section', email: 'Email Banner', 'yt-thumb': 'YouTube Thumbnail', 'yt-banner': 'Channel Art', 'web-card': 'Feature Card' };
+  const contexts = { card: 'Print / stationery', profile: 'Social · circle crop', feed: 'Instagram · Facebook', story: 'Stories · Reels · Shorts', hero: 'Above the fold · full width', email: 'Newsletter header / CTA strip', 'yt-thumb': 'Widescreen · 1280×720px', 'yt-banner': 'Banner · 2560×1440px', 'web-card': 'Content section component' };
   document.getElementById('code-modal-title').textContent   = labels[cellId]   || cellId;
   document.getElementById('code-modal-sub').textContent     = contexts[cellId] || '';
   document.getElementById('code-modal-code').textContent    = _snippetCode;
@@ -2459,7 +2647,8 @@ const kit = {
   activeTagline:   0,
   strategy:        null,
   wordmark:        null,
-  mockupVariants:  null,
+  mockupVariants:   null,
+  mockupPlatform:   'instagram',
   wordmarkVariants: null,
 };
 
@@ -2593,7 +2782,18 @@ function regenSection(section) {
       break;
     }
     case 'mockup': {
-      kit.mockupVariants = null; // pick fresh random layouts
+      // Explicitly randomise all variants — skip industry bias so layouts actually change
+      kit.mockupVariants = {
+        card:         Math.floor(Math.random() * 3),
+        profile:      Math.floor(Math.random() * 2),
+        feed:         Math.floor(Math.random() * 3),
+        story:        Math.floor(Math.random() * 2),
+        hero:         Math.floor(Math.random() * 3),
+        email:        Math.floor(Math.random() * 2),
+        'yt-thumb':   Math.floor(Math.random() * 3),
+        'yt-banner':  Math.floor(Math.random() * 2),
+        'web-card':   Math.floor(Math.random() * 3),
+      };
       document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...bd, taglines: kit.taglines });
       break;
     }

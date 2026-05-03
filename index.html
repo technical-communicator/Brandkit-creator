@@ -336,11 +336,17 @@
                 <div class="kit-section-head">
                   <div class="kit-section-title"><span class="section-num">05</span><h3>Visual Mockups</h3></div>
                   <div class="mockup-head-actions">
-                    <span class="section-badge">6 contexts</span>
                     <button type="button" class="btn btn--sm" onclick="regenSection('mockup')" title="Pick new layout variants for all cells">
                       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>Refresh layouts
                     </button>
                   </div>
+                </div>
+                <div class="platform-tabs" id="platform-tabs">
+                  <button class="platform-tab-btn active" data-platform="instagram" onclick="switchMockupPlatform('instagram')">Instagram</button>
+                  <button class="platform-tab-btn" data-platform="youtube" onclick="switchMockupPlatform('youtube')">YouTube</button>
+                  <button class="platform-tab-btn" data-platform="tiktok" onclick="switchMockupPlatform('tiktok')">TikTok</button>
+                  <button class="platform-tab-btn" data-platform="website" onclick="switchMockupPlatform('website')">Website</button>
+                  <button class="platform-tab-btn" data-platform="print" onclick="switchMockupPlatform('print')">Print &amp; Email</button>
                 </div>
                 <div class="section-content section-content--flush" id="mockup-content"></div>
               </article>

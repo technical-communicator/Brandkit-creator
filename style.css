@@ -797,22 +797,45 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .kit-section--mockup { overflow: visible; }
 .section-content--flush { padding: 0; }
 
-/*
-  6-cell grid layout:
-  Row 1: Card (1) | Profile (2) | Feed (3)
-  Row 2: Story (4, col 1) | Hero (5, cols 2-3)
-  Row 3: Email (6, full width)
-*/
+/* Platform tab strip */
+.platform-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface-raised);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.platform-tabs::-webkit-scrollbar { display: none; }
+.platform-tab-btn {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--transition), border-color var(--transition);
+  margin-bottom: -1px;
+}
+.platform-tab-btn:hover { color: var(--text); }
+.platform-tab-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* Mockup grid — base */
 .mockup-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
   gap: 3px;
   background: var(--border-light);
   border-radius: 0 0 var(--radius) var(--radius);
   overflow: hidden;
 }
-.mockup-cell:nth-child(5) { grid-column: 2 / 4; }
-.mockup-cell:nth-child(6) { grid-column: 1 / 4; }
+.mockup-grid--3col { grid-template-columns: 1fr 1fr 1fr; }
+.mockup-grid--2col { grid-template-columns: 1fr 1fr; }
+.mockup-grid--1col { grid-template-columns: 1fr; }
+.mockup-cell--wide { grid-column: 1 / -1; }
 
 .mockup-cell { background: var(--surface); overflow: hidden; position: relative; }
 
@@ -850,12 +873,15 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   overflow: hidden;
 }
 /* Aspect ratios per context */
-.mockup-frame--card    { aspect-ratio: 1.6 / 1; }
-.mockup-frame--profile { aspect-ratio: 1 / 1; }
-.mockup-frame--feed    { aspect-ratio: 1 / 1; }
-.mockup-frame--story   { aspect-ratio: 9 / 16; }
-.mockup-frame--hero    { aspect-ratio: 2.4 / 1; }
-.mockup-frame--email   { aspect-ratio: 4 / 1; }
+.mockup-frame--card     { aspect-ratio: 1.6 / 1; }
+.mockup-frame--profile  { aspect-ratio: 1 / 1; }
+.mockup-frame--feed     { aspect-ratio: 1 / 1; }
+.mockup-frame--story    { aspect-ratio: 9 / 16; }
+.mockup-frame--hero     { aspect-ratio: 2.4 / 1; }
+.mockup-frame--email    { aspect-ratio: 4 / 1; }
+.mockup-frame--yt-thumb { aspect-ratio: 16 / 9; }
+.mockup-frame--yt-banner{ aspect-ratio: 16 / 3; }
+.mockup-frame--web-card { aspect-ratio: 2 / 1; }
 
 /* Mockup section header layout */
 .mockup-head-actions {
@@ -884,17 +910,15 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 }
 
 @media (max-width: 700px) {
-  .mockup-grid { grid-template-columns: 1fr 1fr; }
-  .mockup-cell:nth-child(5),
-  .mockup-cell:nth-child(6) { grid-column: 1 / 3; }
-  .mockup-frame--hero  { aspect-ratio: 2 / 1; }
-  .mockup-frame--email { aspect-ratio: 3 / 1; }
+  .mockup-grid--3col { grid-template-columns: 1fr 1fr; }
+  .mockup-frame--hero     { aspect-ratio: 2 / 1; }
+  .mockup-frame--email    { aspect-ratio: 3 / 1; }
+  .mockup-frame--yt-banner{ aspect-ratio: 8 / 1; }
 }
 @media (max-width: 480px) {
-  .mockup-grid { grid-template-columns: 1fr 1fr; }
-  .mockup-cell:nth-child(4) { grid-column: 1 / 1; }
-  .mockup-cell:nth-child(5),
-  .mockup-cell:nth-child(6) { grid-column: 1 / 3; }
+  .mockup-grid--3col,
+  .mockup-grid--2col { grid-template-columns: 1fr; }
+  .mockup-cell--wide { grid-column: 1; }
 }
 
 /* ── Content Strategy Section ──────────────────────────────── */
