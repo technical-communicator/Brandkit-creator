@@ -335,7 +335,12 @@
               <article class="kit-section kit-section--mockup">
                 <div class="kit-section-head">
                   <div class="kit-section-title"><span class="section-num">05</span><h3>Visual Mockups</h3></div>
-                  <span class="section-badge">6 contexts</span>
+                  <div class="mockup-head-actions">
+                    <span class="section-badge">6 contexts</span>
+                    <button type="button" class="btn btn--sm" onclick="regenSection('mockup')" title="Pick new layout variants for all cells">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>Refresh layouts
+                    </button>
+                  </div>
                 </div>
                 <div class="section-content section-content--flush" id="mockup-content"></div>
               </article>
@@ -404,6 +409,27 @@
     </footer>
 
   </div><!-- /app -->
+
+  <!-- ─── Code Snippet Modal ─────────────────────────────── -->
+  <div class="code-modal" id="code-modal" hidden role="dialog" aria-modal="true" aria-labelledby="code-modal-title">
+    <div class="code-modal-backdrop" onclick="closeCodeModal()"></div>
+    <div class="code-modal-panel">
+      <div class="code-modal-header">
+        <div class="code-modal-titles">
+          <span class="code-modal-title" id="code-modal-title">Code Snippet</span>
+          <span class="code-modal-sub" id="code-modal-sub"></span>
+        </div>
+        <div class="code-modal-header-actions">
+          <button id="code-copy-btn" class="btn btn--sm" onclick="copyCodeSnippet()">Copy code</button>
+          <button class="btn btn--primary btn--sm" onclick="downloadCodeSnippet()">Download .html</button>
+          <button class="code-modal-close" onclick="closeCodeModal()" aria-label="Close modal">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l10 10M13 3L3 13"/></svg>
+          </button>
+        </div>
+      </div>
+      <pre class="code-modal-pre"><code id="code-modal-code"></code></pre>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

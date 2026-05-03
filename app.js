@@ -1273,10 +1273,18 @@ async function downloadWordmark(variantId) {
   URL.revokeObjectURL(url);
 }
 
-function mockupCell(frameClass, innerHtml, label, context) {
+function mockupCell(frameClass, innerHtml, label, context, cellId) {
   return `
-    <div class="mockup-cell">
+    <div class="mockup-cell" id="mockup-cell-${cellId}">
       <div class="mockup-frame ${frameClass}">${innerHtml}</div>
+      <div class="mockup-cell-actions">
+        <button class="mockup-action-btn" onclick="regenMockupCell('${cellId}')" title="New layout variant">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 8a5.5 5.5 0 018.5-4.58M13.5 8a5.5 5.5 0 01-8.5 4.58M12 3.5l1.5 2-2 .5M4 12.5l-1.5-2 2-.5"/></svg>
+        </button>
+        <button class="mockup-action-btn mockup-action-btn--code" onclick="showCodeSnippet('${cellId}')" title="Download code snippet">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5M9.5 3l-3 10"/></svg>
+        </button>
+      </div>
       <div class="mockup-meta">
         <span class="mockup-meta-label">${label}</span>
         <span class="mockup-meta-context">${context}</span>
@@ -1293,13 +1301,15 @@ function renderMockup(palette, fonts, brandData) {
   const a  = palette.accent.hex;
   const lc = palette.light.hex;
   const dc = palette.dark.hex;
-  // Pick a visual variant set for this render (changes each generation)
-  const vCard    = Math.floor(Math.random() * 3);
-  const vProfile = Math.floor(Math.random() * 2);
-  const vFeed    = Math.floor(Math.random() * 3);
-  const vStory   = Math.floor(Math.random() * 2);
-  const vHero    = Math.floor(Math.random() * 3);
-  const vEmail   = Math.floor(Math.random() * 2);
+  // Persist variant indices across live-updates; only reset on full regen
+  const pv = kit.mockupVariants || {};
+  const vCard    = pv.card    ?? Math.floor(Math.random() * 3);
+  const vProfile = pv.profile ?? Math.floor(Math.random() * 2);
+  const vFeed    = pv.feed    ?? Math.floor(Math.random() * 3);
+  const vStory   = pv.story   ?? Math.floor(Math.random() * 2);
+  const vHero    = pv.hero    ?? Math.floor(Math.random() * 3);
+  const vEmail   = pv.email   ?? Math.floor(Math.random() * 2);
+  kit.mockupVariants = { card: vCard, profile: vProfile, feed: vFeed, story: vStory, hero: vHero, email: vEmail };
   const tp = textOnBg(p);
   const ts = textOnBg(s);
   const tl = textOnBg(lc);
@@ -1515,17 +1525,714 @@ function renderMockup(palette, fonts, brandData) {
 
   return `
     <div class="mockup-grid">
-      ${mockupCell('mockup-frame--card',    card,    'Business Card',    'Print / stationery')}
-      ${mockupCell('mockup-frame--profile', profile, 'Profile Picture',  'Instagram / LinkedIn / Google')}
-      ${mockupCell('mockup-frame--feed',    feed,    'Feed Post',        'Instagram / Facebook')}
-      ${mockupCell('mockup-frame--story',   story,   'Instagram Story',  'Stories / Reels cover')}
-      ${mockupCell('mockup-frame--hero',    hero,    'Web Hero',         'Landing page')}
-      ${mockupCell('mockup-frame--email',   email,   'Email Banner',     'Newsletter header')}
+      ${mockupCell('mockup-frame--card',    card,    'Business Card',    'Print / stationery',              'card')}
+      ${mockupCell('mockup-frame--profile', profile, 'Profile Picture',  'Instagram · LinkedIn · Google',   'profile')}
+      ${mockupCell('mockup-frame--feed',    feed,    'Feed Post',        'Instagram · Facebook',            'feed')}
+      ${mockupCell('mockup-frame--story',   story,   'Instagram Story',  'Stories · Reels cover',           'story')}
+      ${mockupCell('mockup-frame--hero',    hero,    'Web Hero',         'Landing page',                    'hero')}
+      ${mockupCell('mockup-frame--email',   email,   'Email Banner',     'Newsletter header',               'email')}
     </div>`;
 }
 
 /* ─────────────────────────────────────────────────────────────
-   17. RENDER — CONTENT STRATEGY
+   17. MOCKUP — PER-CELL REGEN & CODE SNIPPET MODAL
+   ───────────────────────────────────────────────────────────── */
+
+function regenMockupCell(cellId) {
+  if (!kit.palette || !kit.fonts || !kit.brandData) return;
+  const counts = { card: 3, profile: 2, feed: 3, story: 2, hero: 3, email: 2 };
+  const count  = counts[cellId] ?? 2;
+  const current = (kit.mockupVariants || {})[cellId] ?? 0;
+  let next = Math.floor(Math.random() * count);
+  if (next === current && count > 1) next = (next + 1) % count;
+  if (!kit.mockupVariants) kit.mockupVariants = {};
+  kit.mockupVariants[cellId] = next;
+  document.getElementById('mockup-content').innerHTML = renderMockup(
+    kit.palette, kit.fonts, { ...kit.brandData, taglines: kit.taglines }
+  );
+}
+
+let _snippetCellId = null;
+let _snippetCode   = '';
+
+function showCodeSnippet(cellId) {
+  _snippetCellId = cellId;
+  _snippetCode   = generateSnippetHTML(cellId);
+  const labels   = { card: 'Business Card', profile: 'Profile Picture', feed: 'Feed Post', story: 'Instagram Story', hero: 'Web Hero', email: 'Email Banner' };
+  const contexts = { card: 'Print / stationery', profile: 'Instagram · LinkedIn · Google', feed: 'Instagram · Facebook', story: 'Stories · Reels cover', hero: 'Landing page', email: 'Newsletter header' };
+  document.getElementById('code-modal-title').textContent   = labels[cellId]   || cellId;
+  document.getElementById('code-modal-sub').textContent     = contexts[cellId] || '';
+  document.getElementById('code-modal-code').textContent    = _snippetCode;
+  document.getElementById('code-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCodeModal() {
+  document.getElementById('code-modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+function copyCodeSnippet() {
+  navigator.clipboard.writeText(_snippetCode).then(() => {
+    const btn = document.getElementById('code-copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  });
+}
+
+function downloadCodeSnippet() {
+  const labels = { card: 'business-card', profile: 'profile-picture', feed: 'feed-post', story: 'instagram-story', hero: 'web-hero', email: 'email-banner' };
+  const brand  = (kit.brandData?.brandName || 'brand').toLowerCase().replace(/\s+/g, '-');
+  const fname  = `${brand}-${labels[_snippetCellId] || _snippetCellId}.html`;
+  const blob   = new Blob([_snippetCode], { type: 'text/html' });
+  const url    = URL.createObjectURL(blob);
+  const a      = Object.assign(document.createElement('a'), { href: url, download: fname });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   17b. MOCKUP — SNIPPET GENERATOR
+   ───────────────────────────────────────────────────────────── */
+
+function generateSnippetHTML(cellId) {
+  if (!kit.palette || !kit.fonts || !kit.brandData) return '';
+  const { brandName, taglines = [] } = kit.brandData;
+  const taglineText = (taglines[0]?.text || brandName).replace(/"/g, '');
+  const shortTag    = taglineText.length > 55 ? taglineText.slice(0, 55) + '…' : taglineText;
+  const p  = kit.palette.primary.hex;
+  const s  = kit.palette.secondary.hex;
+  const a  = kit.palette.accent.hex;
+  const lc = kit.palette.light.hex;
+  const dc = kit.palette.dark.hex;
+  const tp = textOnBg(p), ts = textOnBg(s), tl = textOnBg(lc), td = textOnBg(dc), ta = textOnBg(a);
+  const hFont  = kit.fonts.heading;
+  const bFont  = kit.fonts.body;
+  const hw     = kit.fonts.hw;
+  const v      = (kit.mockupVariants || {})[cellId] ?? 0;
+  const handle = '@' + brandName.toLowerCase().replace(/\s+/g, '');
+  const initials = brandName.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+  const gFonts = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(hFont)}:wght@400;700;900&family=${encodeURIComponent(bFont)}:wght@400;500;600;700&display=swap`;
+
+  const tokens = `  :root {
+    --primary:        ${p};
+    --secondary:      ${s};
+    --accent:         ${a};
+    --light:          ${lc};
+    --dark:           ${dc};
+    --on-primary:     ${tp};
+    --on-secondary:   ${ts};
+    --on-accent:      ${ta};
+    --on-light:       ${tl};
+    --on-dark:        ${td};
+    --font-heading:   '${hFont}', Georgia, serif;
+    --font-body:      '${bFont}', system-ui, sans-serif;
+    --fw-heading:     ${hw};
+  }`;
+
+  const head = (title, extra = '') => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} — ${brandName}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="${gFonts}" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+${tokens}${extra}`;
+
+  // ── Business Card ────────────────────────────────────────────
+  if (cellId === 'card') {
+    if (v === 0) return head('Business Card', `
+    /* 3.5 × 2 in standard business card */
+    @page { size: 3.5in 2in; margin: 0; }
+    body { width: 3.5in; height: 2in; font-family: var(--font-body); }
+    .card { display: flex; width: 100%; height: 100%; }
+    .card__brand {
+      width: 38%; background: var(--primary); color: var(--on-primary);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 0.22in 0.18in;
+    }
+    .card__logo { width: 18px; height: 18px; border-radius: 3px; background: var(--accent); }
+    .card__name {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 18px; line-height: 1.15; letter-spacing: -0.01em;
+    }
+    .card__rule { width: 22px; height: 2px; background: var(--accent); border-radius: 2px; margin-top: 8px; }
+    .card__detail {
+      flex: 1; background: var(--light); color: var(--on-light);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 0.18in 0.22in;
+    }
+    .card__tagline { font-size: 9px; opacity: 0.55; line-height: 1.55; margin-bottom: 18px; }
+    .card__url { font-size: 8px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; opacity: 0.28; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card__brand">
+      <div class="card__logo"></div>
+      <div>
+        <div class="card__name">${brandName}</div>
+        <div class="card__rule"></div>
+      </div>
+    </div>
+    <div class="card__detail">
+      <p class="card__tagline">${shortTag}</p>
+      <p class="card__url">${handle}.com</p>
+    </div>
+  </div>
+</body>
+</html>`);
+
+    if (v === 1) return head('Business Card', `
+    @page { size: 3.5in 2in; margin: 0; }
+    body { width: 3.5in; height: 2in; font-family: var(--font-body); }
+    .card {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; width: 100%; height: 100%;
+      background: var(--dark); color: var(--on-dark); gap: 10px;
+      text-align: center; padding: 0.2in;
+    }
+    .card__eyebrow {
+      font-size: 7px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .card__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 18px; line-height: 1.15; letter-spacing: -0.02em;
+    }
+    .card__rule { width: 32px; height: 1px; background: var(--accent); opacity: 0.6; }
+    .card__url { font-size: 7px; opacity: 0.35; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="card__eyebrow">${brandName.toUpperCase()}</p>
+    <h1 class="card__tagline">${shortTag}</h1>
+    <div class="card__rule"></div>
+    <p class="card__url">${handle}.com</p>
+  </div>
+</body>
+</html>`);
+
+    /* v === 2 */
+    return head('Business Card', `
+    @page { size: 3.5in 2in; margin: 0; }
+    body { width: 3.5in; height: 2in; font-family: var(--font-body); }
+    .card { display: flex; flex-direction: column; width: 100%; height: 100%; background: var(--light); }
+    .card__stripe { height: 5px; background: var(--accent); }
+    .card__body {
+      flex: 1; display: flex; align-items: center;
+      justify-content: space-between; padding: 0.16in 0.2in; color: var(--on-light);
+    }
+    .card__name {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 17px; letter-spacing: -0.01em; line-height: 1.15;
+    }
+    .card__tagline { font-size: 8px; opacity: 0.5; margin-top: 6px; }
+    .card__badge {
+      width: 36px; height: 36px; border-radius: 7px;
+      background: var(--primary); color: var(--on-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: 14px; font-weight: 900;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card__stripe"></div>
+    <div class="card__body">
+      <div>
+        <div class="card__name">${brandName}</div>
+        <p class="card__tagline">${shortTag}</p>
+      </div>
+      <div class="card__badge">${initials[0]}</div>
+    </div>
+  </div>
+</body>
+</html>`);
+  }
+
+  // ── Profile Picture ──────────────────────────────────────────
+  if (cellId === 'profile') {
+    const bg   = v === 0 ? lc : p;
+    const onBg = v === 0 ? tl : tp;
+    const avatarBg   = v === 0 ? p  : lc;
+    const avatarText = v === 0 ? tp : p;
+    return head('Profile Picture', `
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: #f0f0f0; font-family: var(--font-body);
+    }
+    /* Render at 400×400 — export/crop to a circle for social media */
+    .profile {
+      width: 400px; height: 400px;
+      background: ${bg}; color: ${onBg};
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 24px;
+    }
+    .profile__avatar {
+      width: 160px; height: 160px; border-radius: 50%;
+      background: ${avatarBg}; color: ${avatarText};
+      border: ${v === 0 ? `4px solid ${a}` : `3px solid ${a}`};
+      display: flex; align-items: center; justify-content: center;
+    }
+    .profile__initials {
+      font-family: var(--font-heading); font-weight: 900;
+      font-size: 56px; line-height: 1;
+    }
+    .profile__name {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 22px; letter-spacing: -0.01em; text-align: center;
+    }
+    .profile__handle {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; opacity: 0.4; margin-top: -16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile">
+    <div class="profile__avatar">
+      <span class="profile__initials">${initials}</span>
+    </div>
+    <div>
+      <p class="profile__name">${brandName}</p>
+      <p class="profile__handle">${handle}</p>
+    </div>
+  </div>
+</body>
+</html>`);
+  }
+
+  // ── Feed Post ────────────────────────────────────────────────
+  if (cellId === 'feed') {
+    if (v === 0) return head('Instagram Feed Post', `
+    /* 1080×1080px recommended export size */
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e5e5e5; font-family: var(--font-body); }
+    .post {
+      width: 540px; height: 540px;
+      background: var(--light); color: var(--on-light);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .post__header { display: flex; align-items: center; gap: 10px; padding: 18px 20px 10px; }
+    .post__avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--primary); color: var(--on-primary); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: 12px; font-weight: 900; flex-shrink: 0;
+    }
+    .post__username { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+    .post__image {
+      flex: 1; background: var(--primary); color: var(--on-primary);
+      display: flex; align-items: center; justify-content: center; padding: 32px;
+    }
+    .post__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 24px; line-height: 1.2; letter-spacing: -0.01em; text-align: center;
+    }
+    .post__footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 16px; }
+    .post__handle { font-size: 11px; opacity: 0.45; }
+    .post__cta {
+      background: var(--accent); color: var(--on-accent);
+      font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="post">
+    <header class="post__header">
+      <div class="post__avatar">${initials[0]}</div>
+      <span class="post__username">${brandName}</span>
+    </header>
+    <div class="post__image">
+      <p class="post__tagline">${shortTag}</p>
+    </div>
+    <footer class="post__footer">
+      <span class="post__handle">${handle}</span>
+      <span class="post__cta">Follow</span>
+    </footer>
+  </div>
+</body>
+</html>`);
+
+    if (v === 1) return head('Instagram Feed Post', `
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e5e5e5; font-family: var(--font-body); }
+    .post {
+      width: 540px; height: 540px;
+      background: var(--dark); color: var(--on-dark);
+      display: flex; flex-direction: column;
+    }
+    .post__header { display: flex; align-items: center; gap: 10px; padding: 18px 20px 10px; }
+    .post__dot { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .post__username { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); }
+    .post__body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 8px 36px; }
+    .post__quote { font-family: var(--font-heading); font-size: 80px; color: var(--accent); line-height: 0.7; margin-bottom: 12px; opacity: 0.8; }
+    .post__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 22px; line-height: 1.25; letter-spacing: -0.01em;
+    }
+    .post__handle { padding: 8px 36px 22px; font-size: 11px; opacity: 0.35; }
+  </style>
+</head>
+<body>
+  <div class="post">
+    <header class="post__header">
+      <div class="post__dot"></div>
+      <span class="post__username">${brandName}</span>
+    </header>
+    <div class="post__body">
+      <div class="post__quote">"</div>
+      <p class="post__tagline">${shortTag}</p>
+    </div>
+    <p class="post__handle">${handle}</p>
+  </div>
+</body>
+</html>`);
+
+    /* v === 2 */
+    return head('Instagram Feed Post', `
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e5e5e5; font-family: var(--font-body); }
+    .post {
+      width: 540px; height: 540px;
+      background: var(--light); color: var(--on-light);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; padding: 48px;
+    }
+    .post__rule-top, .post__rule-bottom { width: 32px; height: 3px; background: var(--accent); border-radius: 2px; }
+    .post__rule-top { margin-bottom: 28px; }
+    .post__rule-bottom { margin-top: 28px; }
+    .post__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 24px; line-height: 1.2; letter-spacing: -0.01em;
+    }
+    .post__brand { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; opacity: 0.35; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="post">
+    <div class="post__rule-top"></div>
+    <p class="post__tagline">${shortTag}</p>
+    <div class="post__rule-bottom"></div>
+    <p class="post__brand">${brandName}</p>
+  </div>
+</body>
+</html>`);
+  }
+
+  // ── Instagram Story ──────────────────────────────────────────
+  if (cellId === 'story') {
+    if (v === 0) return head('Instagram Story', `
+    /* 1080×1920px — export at 2× for retina */
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e5e5e5; font-family: var(--font-body); }
+    .story {
+      width: 390px; height: 693px;
+      background: var(--dark); color: var(--on-dark);
+      display: flex; flex-direction: column;
+    }
+    .story__header { display: flex; align-items: center; gap: 10px; padding: 28px 24px 16px; }
+    .story__avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--primary); color: var(--on-primary); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: 11px; font-weight: 900; flex-shrink: 0;
+    }
+    .story__username { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+    .story__body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px 32px; }
+    .story__rule { width: 32px; height: 3px; background: var(--accent); border-radius: 2px; margin-bottom: 24px; }
+    .story__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 32px; line-height: 1.2; letter-spacing: -0.015em;
+    }
+    .story__footer { padding-bottom: 48px; display: flex; justify-content: center; }
+    .story__cta { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="story">
+    <header class="story__header">
+      <div class="story__avatar">${initials[0]}</div>
+      <span class="story__username">${brandName}</span>
+    </header>
+    <div class="story__body">
+      <div class="story__rule"></div>
+      <p class="story__tagline">${shortTag}</p>
+    </div>
+    <footer class="story__footer">
+      <span class="story__cta">Swipe up ↑</span>
+    </footer>
+  </div>
+</body>
+</html>`);
+
+    /* v === 1 */
+    return head('Instagram Story', `
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e5e5e5; font-family: var(--font-body); }
+    .story {
+      width: 390px; height: 693px;
+      background: var(--primary); color: var(--on-primary);
+      display: flex; flex-direction: column;
+    }
+    .story__header { display: flex; align-items: center; gap: 10px; padding: 28px 24px 16px; }
+    .story__avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--light); border: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: 11px; font-weight: 900;
+      flex-shrink: 0; color: var(--primary);
+    }
+    .story__username { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; opacity: 0.85; }
+    .story__body {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 24px 40px;
+    }
+    .story__tagline {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: 32px; line-height: 1.15; letter-spacing: -0.015em;
+    }
+    .story__divider { width: 40px; height: 2px; background: currentColor; opacity: 0.3; margin-top: 28px; }
+    .story__footer { padding-bottom: 48px; display: flex; justify-content: center; }
+    .story__cta {
+      background: var(--light); color: var(--on-light);
+      font-size: 12px; font-weight: 700; padding: 10px 28px;
+      border-radius: 40px; letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <div class="story">
+    <header class="story__header">
+      <div class="story__avatar">${initials[0]}</div>
+      <span class="story__username">${brandName}</span>
+    </header>
+    <div class="story__body">
+      <p class="story__tagline">${shortTag}</p>
+      <div class="story__divider"></div>
+    </div>
+    <footer class="story__footer">
+      <span class="story__cta">Learn more →</span>
+    </footer>
+  </div>
+</body>
+</html>`);
+  }
+
+  // ── Web Hero ─────────────────────────────────────────────────
+  if (cellId === 'hero') {
+    if (v === 0) return head('Web Hero Section', `
+    body { font-family: var(--font-body); }
+    .hero { display: flex; min-height: 500px; }
+    .hero__content {
+      flex: 1.3; background: var(--dark); color: var(--on-dark);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px 72px;
+    }
+    .hero__eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.11em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+    }
+    .hero__heading {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: clamp(28px, 3.5vw, 48px); line-height: 1.15;
+      letter-spacing: -0.02em; margin-bottom: 32px;
+    }
+    .hero__actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--font-body); font-size: 14px; font-weight: 700;
+      padding: 14px 28px; border-radius: 4px; text-decoration: none; cursor: pointer;
+    }
+    .btn--primary { background: var(--accent); color: var(--on-accent); border: none; }
+    .btn--ghost { background: transparent; color: var(--on-dark); border: 1.5px solid rgba(255,255,255,0.25); }
+    .hero__visual { flex: 0.7; background: var(--primary); }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="hero__content">
+      <p class="hero__eyebrow">${brandName}</p>
+      <h1 class="hero__heading">${shortTag}</h1>
+      <div class="hero__actions">
+        <a href="#" class="btn btn--primary">Get started</a>
+        <a href="#" class="btn btn--ghost">Learn more</a>
+      </div>
+    </div>
+    <div class="hero__visual" aria-hidden="true"></div>
+  </section>
+</body>
+</html>`);
+
+    if (v === 1) return head('Web Hero Section', `
+    body { font-family: var(--font-body); }
+    .hero {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 500px; text-align: center;
+      background: var(--light); color: var(--on-light); padding: 80px 48px;
+    }
+    .hero__eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+    }
+    .hero__heading {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: clamp(28px, 3.5vw, 52px); line-height: 1.12;
+      letter-spacing: -0.02em; max-width: 700px; margin: 0 auto 36px;
+    }
+    .hero__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--font-body); font-size: 14px; font-weight: 700;
+      padding: 14px 28px; border-radius: 4px; text-decoration: none; cursor: pointer;
+    }
+    .btn--primary { background: var(--primary); color: var(--on-primary); border: none; }
+    .btn--outline { background: transparent; color: var(--on-light); border: 1.5px solid var(--primary); }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <p class="hero__eyebrow">${brandName}</p>
+    <h1 class="hero__heading">${shortTag}</h1>
+    <div class="hero__actions">
+      <a href="#" class="btn btn--primary">Get started</a>
+      <a href="#" class="btn btn--outline">Learn more</a>
+    </div>
+  </section>
+</body>
+</html>`);
+
+    /* v === 2 */
+    return head('Web Hero Section', `
+    body { font-family: var(--font-body); }
+    .hero {
+      display: flex; min-height: 500px;
+      background: var(--accent); color: var(--on-accent);
+    }
+    .hero__content {
+      flex: 1.4; display: flex; flex-direction: column;
+      justify-content: center; padding: 80px 72px;
+    }
+    .hero__eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; opacity: 0.6; margin-bottom: 20px;
+    }
+    .hero__heading {
+      font-family: var(--font-heading); font-weight: var(--fw-heading);
+      font-size: clamp(28px, 3.5vw, 48px); line-height: 1.15;
+      letter-spacing: -0.02em; margin-bottom: 32px;
+    }
+    .btn--primary {
+      display: inline-block; background: var(--on-accent); color: var(--accent);
+      font-family: var(--font-body); font-size: 14px; font-weight: 700;
+      padding: 14px 28px; border-radius: 4px; text-decoration: none; cursor: pointer;
+    }
+    .hero__decor {
+      flex: 0.6; display: flex; align-items: center; justify-content: center;
+    }
+    .hero__circle {
+      width: 260px; height: 260px; border-radius: 50%;
+      background: var(--on-accent); opacity: 0.08;
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="hero__content">
+      <p class="hero__eyebrow">${brandName}</p>
+      <h1 class="hero__heading">${shortTag}</h1>
+      <a href="#" class="btn--primary">Get started</a>
+    </div>
+    <div class="hero__decor" aria-hidden="true">
+      <div class="hero__circle"></div>
+    </div>
+  </section>
+</body>
+</html>`);
+  }
+
+  // ── Email Banner ─────────────────────────────────────────────
+  if (cellId === 'email') {
+    if (v === 0) return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Banner — ${brandName}</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'${bFont}',Arial,sans-serif;">
+  <!-- Email banner: 600px wide, ~80px tall. Paste into email template. -->
+  <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" align="center"
+         style="background:${s};border-radius:8px;overflow:hidden;">
+    <tr>
+      <!-- Logo + name -->
+      <td width="200" style="padding:20px 20px 20px 24px;vertical-align:middle;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="vertical-align:middle;padding-right:10px;">
+              <div style="width:22px;height:22px;border-radius:4px;background:${p};"></div>
+            </td>
+            <td style="vertical-align:middle;">
+              <span style="font-family:'${hFont}',Georgia,serif;font-weight:${hw};font-size:16px;color:${ts};letter-spacing:-0.01em;">${brandName}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <!-- Tagline -->
+      <td style="padding:20px 16px;vertical-align:middle;text-align:center;">
+        <span style="font-family:'${bFont}',Arial,sans-serif;font-size:13px;color:${ts};opacity:0.6;">${shortTag}</span>
+      </td>
+      <!-- CTA -->
+      <td width="140" style="padding:20px 24px 20px 16px;vertical-align:middle;text-align:right;">
+        <a href="#" style="background:${a};color:${ta};font-family:'${bFont}',Arial,sans-serif;font-size:12px;font-weight:700;text-decoration:none;padding:10px 18px;border-radius:4px;display:inline-block;">Subscribe →</a>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    /* v === 1 */
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Banner — ${brandName}</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'${bFont}',Arial,sans-serif;">
+  <!-- Email banner: 600px wide, ~80px tall. Paste into email template. -->
+  <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" align="center"
+         style="background:${dc};border-radius:8px;overflow:hidden;">
+    <tr>
+      <!-- Accent stripe -->
+      <td width="4" style="background:${a};padding:0;line-height:0;" aria-hidden="true">&nbsp;</td>
+      <!-- Brand name -->
+      <td width="180" style="padding:20px 20px 20px 20px;vertical-align:middle;">
+        <span style="font-family:'${hFont}',Georgia,serif;font-weight:${hw};font-size:16px;color:${td};letter-spacing:-0.01em;">${brandName}</span>
+      </td>
+      <!-- Tagline -->
+      <td style="padding:20px 16px;vertical-align:middle;text-align:center;">
+        <span style="font-family:'${bFont}',Arial,sans-serif;font-size:13px;color:${td};opacity:0.45;">${shortTag}</span>
+      </td>
+      <!-- CTA -->
+      <td width="150" style="padding:20px 24px 20px 16px;vertical-align:middle;text-align:right;">
+        <a href="#" style="border:1px solid ${a};color:${a};font-family:'${bFont}',Arial,sans-serif;font-size:12px;font-weight:700;text-decoration:none;padding:10px 18px;border-radius:4px;display:inline-block;">Subscribe →</a>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  return `<!-- No snippet available for "${cellId}" -->`;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   18. RENDER — CONTENT STRATEGY
    ───────────────────────────────────────────────────────────── */
 
 function renderStrategy(strategy) {
@@ -1616,6 +2323,11 @@ function regenSection(section) {
       kit.activeTagline = 0;
       document.getElementById('tagline-content').innerHTML = renderTagline(kit.taglines, 0);
       // Refresh mockup tagline
+      document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...bd, taglines: kit.taglines });
+      break;
+    }
+    case 'mockup': {
+      kit.mockupVariants = null; // pick fresh random layouts
       document.getElementById('mockup-content').innerHTML = renderMockup(kit.palette, kit.fonts, { ...bd, taglines: kit.taglines });
       break;
     }
@@ -1719,6 +2431,7 @@ async function generateKit(brandData) {
 
   // Mockup + wordmark need fonts — short wait for load
   await document.fonts.ready;
+  kit.mockupVariants = null; // fresh random layouts on each full generation
   document.getElementById('mockup-content').innerHTML = renderMockup(
     kit.palette, kit.fonts, { ...brandData, taglines: kit.taglines }
   );
