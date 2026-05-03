@@ -103,6 +103,61 @@
           </div>
         </form>
 
+        <!-- Brand Personality -->
+        <div class="personality-section">
+          <div class="personality-head">
+            <div class="personality-title">Brand personality <span class="field-note optional-label">optional</span></div>
+            <p class="personality-sub">Pick an archetype and tune the voice sliders — or leave blank to let the generator decide.</p>
+          </div>
+
+          <div class="archetype-grid">
+            <button type="button" class="archetype-card" data-archetype="sincerity">
+              <span class="arch-emoji">🌿</span>
+              <span class="arch-label">Sincere</span>
+              <span class="arch-desc">Honest · Warm · Wholesome</span>
+            </button>
+            <button type="button" class="archetype-card" data-archetype="excitement">
+              <span class="arch-emoji">⚡</span>
+              <span class="arch-label">Exciting</span>
+              <span class="arch-desc">Daring · Spirited · Bold</span>
+            </button>
+            <button type="button" class="archetype-card" data-archetype="competence">
+              <span class="arch-emoji">🎯</span>
+              <span class="arch-label">Competent</span>
+              <span class="arch-desc">Reliable · Expert · Clear</span>
+            </button>
+            <button type="button" class="archetype-card" data-archetype="sophistication">
+              <span class="arch-emoji">✦</span>
+              <span class="arch-label">Sophisticated</span>
+              <span class="arch-desc">Elegant · Refined · Chic</span>
+            </button>
+            <button type="button" class="archetype-card" data-archetype="ruggedness">
+              <span class="arch-emoji">🏔</span>
+              <span class="arch-label">Rugged</span>
+              <span class="arch-desc">Tough · Grounded · Direct</span>
+            </button>
+          </div>
+
+          <div class="tone-sliders">
+            <div class="tone-slider-row">
+              <div class="tone-slider-labels">
+                <span>Formal</span>
+                <span class="tone-slider-value" id="slider-formality-label">Balanced</span>
+                <span>Casual</span>
+              </div>
+              <input type="range" id="slider-formality" class="tone-range" min="0" max="100" value="50" step="1">
+            </div>
+            <div class="tone-slider-row">
+              <div class="tone-slider-labels">
+                <span>Measured</span>
+                <span class="tone-slider-value" id="slider-enthusiasm-label">Balanced</span>
+                <span>Enthusiastic</span>
+              </div>
+              <input type="range" id="slider-enthusiasm" class="tone-range" min="0" max="100" value="50" step="1">
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="action-bar">
           <button type="button" class="btn btn--demo" id="demo-btn" title="Auto-populate with a sample brand and generate">
@@ -179,6 +234,9 @@
               </button>
               <button class="tab-btn" data-tab="strategy" role="tab" aria-selected="false" aria-controls="panel-strategy">
                 <span class="tab-num">06</span><span class="tab-label">Strategy</span>
+              </button>
+              <button class="tab-btn" data-tab="wordmark" role="tab" aria-selected="false" aria-controls="panel-wordmark">
+                <span class="tab-num">07</span><span class="tab-label">Wordmark</span>
               </button>
             </nav>
           </div>
@@ -304,6 +362,17 @@
               </article>
             </div>
 
+            <!-- 07 Wordmark -->
+            <div class="tab-panel" id="panel-wordmark" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">07</span><h3>Wordmark</h3></div>
+                  <span class="section-badge">4 variants · SVG download</span>
+                </div>
+                <div class="section-content" id="wordmark-content"></div>
+              </article>
+            </div>
+
           </div><!-- /container -->
         </div><!-- /tab-panels -->
 
@@ -315,7 +384,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
                 Previous
               </button>
-              <span class="panel-nav-count" id="panel-nav-count">1 / 6</span>
+              <span class="panel-nav-count" id="panel-nav-count">1 / 7</span>
               <button type="button" class="btn btn--ghost btn--sm" id="next-tab-btn">
                 Next
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>

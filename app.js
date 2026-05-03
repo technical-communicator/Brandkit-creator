@@ -167,20 +167,96 @@ async function extractColorsFromUploadedImages() {
    ───────────────────────────────────────────────────────────── */
 
 const FONT_PAIRINGS = [
-  { id: 'editorial',  heading: 'Playfair Display', body: 'Lato',              hw: '700', bw: '400', desc: 'Elegant serif headings with clean humanist body text.', keywords: ['elegant','luxury','editorial','sophisticated','premium','fashion','boutique','artisan','refined'], industries: ['fashion-beauty','arts-entertainment','food-beverage'] },
-  { id: 'bold',       heading: 'Oswald',            body: 'Merriweather',      hw: '700', bw: '400', desc: 'Condensed sans headings with solid slab-serif body — strong and readable.', keywords: ['bold','strong','powerful','impactful','energetic','assertive','direct'], industries: ['sports','fitness','construction'] },
-  { id: 'modern',     heading: 'Montserrat',        body: 'Open Sans',         hw: '700', bw: '400', desc: 'Geometric sans-serif throughout — modern, neutral, universal.', keywords: ['modern','clean','professional','corporate','neutral','polished'], industries: ['technology','finance','consulting','professional-services'] },
-  { id: 'friendly',   heading: 'Nunito',            body: 'Nunito Sans',       hw: '700', bw: '400', desc: 'Rounded letterforms that feel warm, welcoming, and approachable.', keywords: ['friendly','approachable','playful','warm','cheerful','fun','community','inclusive'], industries: ['education','nonprofit','children'] },
-  { id: 'artisan',    heading: 'Cormorant Garamond',body: 'Proza Libre',       hw: '700', bw: '400', desc: 'Refined old-style serifs — artisan character with excellent readability.', keywords: ['artisan','craft','traditional','heritage','organic','natural','honest','earthy'], industries: ['food-beverage','health-wellness'] },
-  { id: 'tech',       heading: 'IBM Plex Sans',     body: 'IBM Plex Mono',     hw: '600', bw: '400', desc: 'Systematic type system — precise, technical, trustworthy.', keywords: ['technical','precise','systematic','developer','engineering','data','code'], industries: ['technology'] },
-  { id: 'creative',   heading: 'Raleway',           body: 'Source Sans 3',     hw: '700', bw: '400', desc: 'Art-deco inspired headings with clear, open body text.', keywords: ['creative','artistic','expressive','design','agency','photography','unconventional'], industries: ['design','agency','arts-entertainment'] },
-  { id: 'startup',    heading: 'Inter',             body: 'Inter',             hw: '700', bw: '400', desc: 'Optimised for screens — clean, functional, efficient.', keywords: ['startup','digital','functional','efficient','innovative','saas','minimal'], industries: ['technology','retail'] },
-  { id: 'classic',    heading: 'Libre Baskerville', body: 'Source Sans 3',     hw: '700', bw: '400', desc: 'Classic serif heading with modern sans body — timeless and trustworthy.', keywords: ['classic','trustworthy','academic','established','reliable','authoritative'], industries: ['education','finance','real-estate','professional-services'] },
-  { id: 'geometric',  heading: 'Josefin Sans',      body: 'Josefin Slab',      hw: '700', bw: '400', desc: 'Geometric pair with 1920s art-deco character — structured and stylish.', keywords: ['geometric','vintage','retro','architectural','structured','distinctive'], industries: ['real-estate','travel-hospitality','fashion-beauty'] },
+  { id: 'editorial',   heading: 'Playfair Display',   body: 'Lato',               hw: '700', bw: '400', desc: 'Elegant serif headings with clean humanist body text.', keywords: ['elegant','luxury','editorial','sophisticated','premium','fashion','boutique','artisan','refined'], industries: ['fashion-beauty','arts-entertainment','food-beverage'], wordmarkTracking: '-0.01em', allCaps: false },
+  { id: 'bold',        heading: 'Oswald',              body: 'Merriweather',        hw: '700', bw: '400', desc: 'Condensed sans headings with solid slab-serif body — strong and readable.', keywords: ['bold','strong','powerful','impactful','energetic','assertive','direct'], industries: ['sports','fitness','construction'], wordmarkTracking: '0.06em', allCaps: true },
+  { id: 'modern',      heading: 'Montserrat',          body: 'Open Sans',           hw: '700', bw: '400', desc: 'Geometric sans-serif throughout — modern, neutral, universal.', keywords: ['modern','clean','professional','corporate','neutral','polished'], industries: ['technology','finance','consulting','professional-services'], wordmarkTracking: '0.04em', allCaps: false },
+  { id: 'friendly',    heading: 'Nunito',              body: 'Nunito Sans',         hw: '700', bw: '400', desc: 'Rounded letterforms that feel warm, welcoming, and approachable.', keywords: ['friendly','approachable','playful','warm','cheerful','fun','community','inclusive'], industries: ['education','nonprofit','children'], wordmarkTracking: '0.01em', allCaps: false },
+  { id: 'artisan',     heading: 'Cormorant Garamond',  body: 'Proza Libre',         hw: '700', bw: '400', desc: 'Refined old-style serifs — artisan character with excellent readability.', keywords: ['artisan','craft','traditional','heritage','organic','natural','honest','earthy'], industries: ['food-beverage','health-wellness'], wordmarkTracking: '0.02em', allCaps: false },
+  { id: 'tech',        heading: 'IBM Plex Sans',       body: 'IBM Plex Mono',       hw: '600', bw: '400', desc: 'Systematic type system — precise, technical, trustworthy.', keywords: ['technical','precise','systematic','developer','engineering','data','code'], industries: ['technology'], wordmarkTracking: '0.08em', allCaps: true },
+  { id: 'creative',    heading: 'Raleway',             body: 'Source Sans 3',       hw: '700', bw: '400', desc: 'Art-deco inspired headings with clear, open body text.', keywords: ['creative','artistic','expressive','design','agency','photography','unconventional'], industries: ['design','agency','arts-entertainment'], wordmarkTracking: '0.12em', allCaps: true },
+  { id: 'startup',     heading: 'Inter',               body: 'Inter',               hw: '700', bw: '400', desc: 'Optimised for screens — clean, functional, efficient.', keywords: ['startup','digital','functional','efficient','innovative','saas','minimal'], industries: ['technology','retail'], wordmarkTracking: '0.0em', allCaps: false },
+  { id: 'classic',     heading: 'Libre Baskerville',   body: 'Source Sans 3',       hw: '700', bw: '400', desc: 'Classic serif heading with modern sans body — timeless and trustworthy.', keywords: ['classic','trustworthy','academic','established','reliable','authoritative'], industries: ['education','finance','real-estate','professional-services'], wordmarkTracking: '0.03em', allCaps: false },
+  { id: 'geometric',   heading: 'Josefin Sans',        body: 'Josefin Slab',        hw: '700', bw: '400', desc: 'Geometric pair with 1920s art-deco character — structured and stylish.', keywords: ['geometric','vintage','retro','architectural','structured','distinctive'], industries: ['real-estate','travel-hospitality','fashion-beauty'], wordmarkTracking: '0.1em', allCaps: true },
+  // Graphic-design-forward additions (2024–2025 editorial favourites)
+  { id: 'fraunces',    heading: 'Fraunces',            body: 'Plus Jakarta Sans',   hw: '700', bw: '400', desc: 'Optical-size variable serif with personality paired with geometric humanist body.', keywords: ['editorial','expressive','distinctive','literary','craft','journal','magazine','narrative'], industries: ['arts-entertainment','food-beverage','fashion-beauty'], wordmarkTracking: '-0.02em', allCaps: false },
+  { id: 'syne',        heading: 'Syne',                body: 'Space Grotesk',       hw: '700', bw: '400', desc: 'Avant-garde geometric headings with quirky grotesk body — design-forward.', keywords: ['design','agency','avant-garde','studio','contemporary','experimental','graphic','unconventional'], industries: ['design','arts-entertainment','technology'], wordmarkTracking: '0.08em', allCaps: true },
+  { id: 'bebas',       heading: 'Bebas Neue',          body: 'Archivo',             hw: '400', bw: '400', desc: 'All-caps condensed impact headings with versatile grotesque body text.', keywords: ['bold','strong','impact','powerful','sports','urban','high-impact','energetic','assertive','intense'], industries: ['sports','arts-entertainment','retail'], wordmarkTracking: '0.12em', allCaps: true },
+  { id: 'dmserif',     heading: 'DM Serif Display',    body: 'DM Sans',             hw: '400', bw: '400', desc: 'Transitional display serif matched with its humanist sans — polished and harmonious.', keywords: ['polished','refined','editorial','modern','premium','sophisticated','elevated','luxury'], industries: ['fashion-beauty','professional-services','finance'], wordmarkTracking: '0em', allCaps: false },
+  { id: 'bricolage',   heading: 'Bricolage Grotesque', body: 'Plus Jakarta Sans',   hw: '700', bw: '400', desc: 'Variable grotesque with warmth and character — feels human, not generic.', keywords: ['human','warm','tech','startup','approachable','community','friendly','personality'], industries: ['technology','education','nonprofit'], wordmarkTracking: '-0.01em', allCaps: false },
+  { id: 'unbounded',   heading: 'Unbounded',           body: 'Space Grotesk',       hw: '700', bw: '400', desc: 'Futuristic geometric headings — strong brand presence for forward-looking brands.', keywords: ['futuristic','tech','innovation','geometric','forward','progressive','digital','web3'], industries: ['technology','finance','retail'], wordmarkTracking: '0.1em', allCaps: true },
+  { id: 'jakarta',     heading: 'Plus Jakarta Sans',   body: 'Plus Jakarta Sans',   hw: '700', bw: '400', desc: 'Versatile geometric humanist equally strong for both headings and body.', keywords: ['clean','modern','startup','minimal','digital','versatile','professional'], industries: ['technology','education','professional-services'], wordmarkTracking: '0.02em', allCaps: false },
+  { id: 'archivo',     heading: 'Archivo Black',       body: 'Archivo',             hw: '900', bw: '400', desc: 'Heavy grotesque heading with lighter grotesque body — strong brand contrast.', keywords: ['impactful','commercial','confident','direct','retail','brand','promotions','marketing','bold'], industries: ['retail','food-beverage','nonprofit'], wordmarkTracking: '0.05em', allCaps: false },
 ];
 
 /* ─────────────────────────────────────────────────────────────
-   4. INDUSTRY BASE HUES + CONTENT STRATEGY DATA
+   4. BRAND ARCHETYPES (Aaker's five dimensions)
+   ───────────────────────────────────────────────────────────── */
+
+const ARCHETYPES = {
+  sincerity: {
+    label: 'Sincere',
+    emoji: '🌿',
+    desc: 'Honest · Warm · Wholesome',
+    traits: ['warm','honest','genuine','approachable','friendly'],
+    satMod: -8, warmMod: +15,
+    preferredFonts: ['artisan','fraunces','friendly','classic'],
+    formality: 38, enthusiasm: 58,
+    examples: 'Patagonia · Innocent · Ben & Jerry\'s',
+    archIntro: (n) => `${n} is grounded in genuine values and real human connection. Speaks with warmth, avoids pretense, and earns trust by saying exactly what it means — never spinning, never performing.`,
+    wordmarkWeight: '600', wordmarkCase: 'title',
+  },
+  excitement: {
+    label: 'Exciting',
+    emoji: '⚡',
+    desc: 'Daring · Spirited · Imaginative',
+    traits: ['energetic','bold','creative','fresh','inspiring'],
+    satMod: +18, warmMod: +5,
+    preferredFonts: ['bebas','syne','bold','creative','unbounded'],
+    formality: 72, enthusiasm: 88,
+    examples: 'Red Bull · Nike · Spotify',
+    archIntro: (n) => `${n} lives at the edge of what's possible. Speaks with conviction and energy — never mundane, always moving. Takes risks with language the same way it takes risks in everything else.`,
+    wordmarkWeight: '800', wordmarkCase: 'upper',
+  },
+  competence: {
+    label: 'Competent',
+    emoji: '🎯',
+    desc: 'Reliable · Intelligent · Successful',
+    traits: ['authoritative','trustworthy','professional','clear','technical'],
+    satMod: -5, warmMod: -10,
+    preferredFonts: ['modern','tech','classic','startup','jakarta'],
+    formality: 22, enthusiasm: 38,
+    examples: 'IBM · Apple · McKinsey',
+    archIntro: (n) => `${n} commands respect through demonstrated expertise, not claimed authority. Every word is deliberate, every claim backed. Leads with clarity; follows through with precision.`,
+    wordmarkWeight: '700', wordmarkCase: 'upper',
+  },
+  sophistication: {
+    label: 'Sophisticated',
+    emoji: '✦',
+    desc: 'Elegant · Glamorous · Charming',
+    traits: ['elegant','luxurious','sophisticated','considered','refined'],
+    satMod: -12, warmMod: -5,
+    preferredFonts: ['editorial','dmserif','artisan','fraunces'],
+    formality: 15, enthusiasm: 28,
+    examples: 'Chanel · The Economist · Hermès',
+    archIntro: (n) => `${n} speaks in understated tones. Prestige is expressed through restraint, not volume. Every word carefully chosen; the silences matter as much as what's said.`,
+    wordmarkWeight: '400', wordmarkCase: 'title',
+  },
+  ruggedness: {
+    label: 'Rugged',
+    emoji: '🏔',
+    desc: 'Outdoorsy · Tough · Durable',
+    traits: ['bold','grounded','direct','honest','candid'],
+    satMod: -6, warmMod: +10,
+    preferredFonts: ['bold','bebas','archivo','geometric'],
+    formality: 55, enthusiasm: 55,
+    examples: 'Carhartt · Jeep · Filson',
+    archIntro: (n) => `${n} is no-nonsense and built to last. Speaks plainly and honestly about what it is and what it does. Values durability and authenticity over polish or performance.`,
+    wordmarkWeight: '700', wordmarkCase: 'upper',
+  },
+};
+
+/* ─────────────────────────────────────────────────────────────
+   5. INDUSTRY BASE HUES + CONTENT STRATEGY DATA
    ───────────────────────────────────────────────────────────── */
 
 const INDUSTRY_BASE_HUES = {
@@ -452,6 +528,9 @@ const DEMO = {
   tone:        'warm, honest, approachable, fresh',
   avoid:       'clinical language, diet culture messaging, corporate jargon',
   photos:      ['demo/photos/photo1.png', 'demo/photos/photo2.png', 'demo/photos/photo3.png'],
+  archetype:   'sincerity',
+  formality:   38,
+  enthusiasm:  58,
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -485,10 +564,17 @@ function buildPaletteFromExtracted(extractedColors, brandData) {
   return assemblePalette(primary, secondary, accent, brandData);
 }
 
-function generatePaletteFromIndustry(industry, toneWords, guidance = '') {
+function generatePaletteFromIndustry(industry, toneWords, guidance = '', archetypeId = '') {
   const toneStr = (toneWords.join(' ') + ' ' + guidance).toLowerCase();
   let baseH = INDUSTRY_BASE_HUES[industry] ?? 210;
   let sat   = 62, lit = 44;
+
+  // Archetype saturation + warmth modifiers
+  const arch = ARCHETYPES[archetypeId];
+  if (arch) {
+    sat   = Math.max(10, Math.min(95, sat + (arch.satMod || 0)));
+    baseH = ((baseH + (arch.warmMod || 0)) + 360) % 360;
+  }
 
   // Keyword-driven hue overrides
   const hueMap = {
@@ -537,11 +623,7 @@ function assemblePalette(primary, secondary, accent, brandData) {
 }
 
 function applyPaletteGuidance(currentPalette, guidance, brandData) {
-  const primaryHex = currentPalette.primary.hex;
-  const { h, s, l } = hexToHsl(primaryHex);
-  const newPrimary  = hslToHex(h, s, l); // start point
-  // generatePaletteFromIndustry re-parses guidance keywords
-  return generatePaletteFromIndustry(brandData.industry, brandData.toneWords, guidance);
+  return generatePaletteFromIndustry(brandData.industry, brandData.toneWords, guidance, brandData.archetype);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -549,12 +631,14 @@ function applyPaletteGuidance(currentPalette, guidance, brandData) {
    ───────────────────────────────────────────────────────────── */
 
 function selectFontPairing(brandData, guidance = '') {
-  const { toneWords = [], industry = '' } = brandData;
+  const { toneWords = [], industry = '', archetype = '' } = brandData;
   const words = [...toneWords, ...(guidance.toLowerCase().split(/\W+/))];
+  const arch  = ARCHETYPES[archetype];
   const scores = FONT_PAIRINGS.map(pair => {
     let score = 0;
     words.forEach(w => { if (pair.keywords.includes(w)) score += 3; });
     if (pair.industries.includes(industry)) score += 4;
+    if (arch?.preferredFonts.includes(pair.id)) score += 5;
     return { pair, score };
   });
   scores.sort((a, b) => b.score - a.score);
@@ -576,47 +660,47 @@ function loadGoogleFont(family, weights = '400;600;700') {
    ───────────────────────────────────────────────────────────── */
 
 const TRAIT_LIBRARY = {
-  bold:          { desc: 'Direct and confident in every claim', not: 'not aggressive or dismissive' },
-  warm:          { desc: 'Speaks like a trusted friend, not a vendor', not: 'not cloying or overly familiar' },
-  professional:  { desc: 'Polished and credible in all communications', not: 'not stuffy or inaccessible' },
-  playful:       { desc: 'Light-hearted and creative in tone', not: 'not juvenile or unserious' },
-  elegant:       { desc: 'Refined and intentional in word choice', not: 'not pretentious or cold' },
-  honest:        { desc: 'Transparent and straightforward about what we offer', not: 'not blunt or harsh' },
-  energetic:     { desc: 'Enthusiastic and active in phrasing', not: 'not frantic or overwhelming' },
-  calm:          { desc: 'Measured and reassuring in all contexts', not: 'not flat or emotionless' },
-  authoritative: { desc: 'Expert-led, evidence-backed messaging', not: 'not preachy or condescending' },
-  creative:      { desc: 'Unexpected angles and fresh perspectives', not: 'not confusing or inaccessible' },
-  trustworthy:   { desc: 'Consistent, accurate, and reliable messaging', not: 'not boring or corporate' },
-  luxurious:     { desc: 'Elevated and aspirational language', not: 'not ostentatious or exclusionary' },
-  organic:       { desc: 'Natural, earthy language that feels unforced', not: 'not preachy or greenwashing' },
-  minimal:       { desc: 'Every word earns its place — no filler', not: 'not terse or cold' },
-  approachable:  { desc: 'Accessible language everyone can understand', not: 'not dumbed-down' },
-  sophisticated: { desc: 'Intelligent and nuanced communication', not: 'not inaccessible or elitist' },
-  friendly:      { desc: 'Inviting and genuine across all touchpoints', not: 'not fake-cheerful' },
-  technical:     { desc: 'Precise and domain-accurate terminology', not: 'not jargon-heavy for lay audiences' },
-  edgy:          { desc: 'Pushes conventions and takes risks with language', not: 'not offensive or alienating' },
-  classic:       { desc: 'Timeless language that doesn\'t chase trends', not: 'not dated or stiff' },
-  clear:         { desc: 'Unambiguous and easy to act on', not: 'not blunt to the point of feeling dismissive' },
-  direct:        { desc: 'Says what it means without hedging or padding', not: 'not aggressive or terse' },
-  encouraging:   { desc: 'Uplifts and motivates without being saccharine', not: 'not patronising or hollow' },
-  inclusive:     { desc: 'Language that makes everyone feel seen and welcome', not: 'not so cautious it loses personality' },
-  genuine:       { desc: 'Authentic and free from marketing jargon', not: 'not rough or unpolished' },
-  inspiring:     { desc: 'Sparks curiosity and makes people want to act', not: 'not hyperbolic or ungrounded' },
-  fresh:         { desc: 'Contemporary language that feels current, not trendy', not: 'not chasing slang that will date badly' },
-  considered:    { desc: 'Thoughtful and measured — speaks carefully about big ideas', not: 'not slow or equivocating' },
-  grounded:      { desc: 'Rooted in reality and practical outcomes', not: 'not dry or uninspiring' },
-  candid:        { desc: 'Straight-talking, even on hard topics', not: 'not blunt to the point of rudeness' },
-  evocative:     { desc: 'Sensory, specific language that creates mental images', not: 'not purple prose or overwrought' },
-  practical:     { desc: 'Action-oriented and focused on tangible results', not: 'not dry or overly procedural' },
+  bold:          { means: 'Direct and confident — states positions without hedging', do: '"We built this differently. Here\'s why it works."', dont: '"We think this might be worth considering for certain use cases."' },
+  warm:          { means: 'Speaks like a trusted friend, not a vendor', do: '"We know mornings are hard. That\'s exactly why we made this."', dont: '"Our product is designed to optimize your morning routine efficiency."' },
+  professional:  { means: 'Polished and credible — substance over style', do: '"Our methodology reduced churn by 34% across 50+ clients."', dont: '"We are a leading provider of world-class solutions."' },
+  playful:       { means: 'Light-hearted and creative — wit used purposefully', do: '"Life\'s too short for boring salads. You\'re welcome."', dont: '"LOL our product is literally so amazing you guys 😂😂"' },
+  elegant:       { means: 'Refined word choice — intention in every phrase', do: '"Crafted from materials that improve with use."', dont: '"Super nice stuff that looks totally luxurious and amazing!"' },
+  honest:        { means: 'Transparent about what we offer — and what we don\'t', do: '"This works best for X. If you need Y, we\'re not the right fit."', dont: '"Our solution handles everything your business could ever need."' },
+  energetic:     { means: 'Active, present-tense voice — moves people to action', do: '"Start building today. Your first project is on us."', dont: '"Users are able to begin the process of project initiation immediately."' },
+  calm:          { means: 'Measured and reassuring — never reactive or alarmist', do: '"Here\'s what\'s happening and what it means for you."', dont: '"URGENT: Everything is changing — don\'t get left behind!!"' },
+  authoritative: { means: 'Expert-led, evidence-backed — earns credibility', do: '"A 2024 Stanford study found that teams using structured review cut errors by 41%."', dont: '"Studies show our approach is the best way to handle this."' },
+  creative:      { means: 'Unexpected angles — fresh perspectives, never formula', do: '"The brief said \'timeless\'. We made \'forever anxious about trends\'."', dont: '"We offer innovative and creative solutions for modern brands."' },
+  trustworthy:   { means: 'Consistent, accurate — does exactly what it says', do: '"Ships in 3–5 days. No exceptions."', dont: '"Ships quickly — timing may vary based on demand."' },
+  luxurious:     { means: 'Elevated and aspirational — restraint signals quality', do: '"One piece. Designed to last 20 years."', dont: '"The most luxurious, premium, high-end product you\'ve ever seen!!!"' },
+  organic:       { means: 'Natural, unforced language — earthy specificity', do: '"Hand-pressed from heirloom olives picked before first frost."', dont: '"100% natural, eco-friendly, sustainable, artisan-crafted goodness."' },
+  minimal:       { means: 'Every word earns its place — no filler, no hedging', do: '"Less. Better."', dont: '"We are proud to offer you a truly comprehensive and holistic selection of..."' },
+  approachable:  { means: 'Accessible to anyone — complexity reduced, not removed', do: '"Think of it like a search engine, but for your own files."', dont: '"Our AI-powered vectorised semantic search infrastructure democratises..."' },
+  sophisticated: { means: 'Intelligent and nuanced — rewards attention', do: '"The intersection of craft and utility is where we live."', dont: '"Super cool sophisticated vibes for smart educated people."' },
+  friendly:      { means: 'Inviting and genuine — warmth without performance', do: '"Pull up a chair. We\'ve got a lot to show you."', dont: '"Hi there valued customer! We\'re SO excited to serve you today!!! 😊"' },
+  technical:     { means: 'Precise and domain-accurate — right word every time', do: '"Latency under 12ms at p95. Tested at 10k concurrent connections."', dont: '"Our system is super fast and handles tons of users simultaneously."' },
+  edgy:          { means: 'Pushes conventions — takes risks others avoid', do: '"Most brands wouldn\'t admit this. We\'re not most brands."', dont: '"We\'re edgy and disruptive and totally not like other companies!!!"' },
+  classic:       { means: 'Timeless language — doesn\'t chase trends', do: '"Made to last. Designed to be inherited."', dont: '"This season\'s most on-trend, viral, must-have drop is here."' },
+  clear:         { means: 'Unambiguous and easy to act on — clarity over cleverness', do: '"Click here to book your free 30-minute call."', dont: '"We invite you to explore the possibility of initiating a consultation."' },
+  direct:        { means: 'Says what it means — no padding, no hedging', do: '"It\'s expensive. Here\'s exactly why."', dont: '"While pricing varies based on many important factors and considerations..."' },
+  encouraging:   { means: 'Uplifts and motivates — grounded in real possibility', do: '"You don\'t need experience. You just need to start."', dont: '"BELIEVE IN YOURSELF!! YOU CAN DO ANYTHING YOU SET YOUR MIND TO!!!"' },
+  inclusive:     { means: 'Makes everyone feel seen — without erasure of identity', do: '"For anyone who\'s ever felt like the industry wasn\'t made for them."', dont: '"We welcome all kinds of diverse and inclusive types of various people."' },
+  genuine:       { means: 'Authentic and jargon-free — real voice, real stakes', do: '"This took us three years to get right. We\'re still learning."', dont: '"As a purpose-driven brand, we leverage authentic storytelling frameworks."' },
+  inspiring:     { means: 'Sparks curiosity — makes people want to act', do: '"What if your morning routine actually worked with you?"', dont: '"Our product will completely transform and revolutionize your entire life."' },
+  fresh:         { means: 'Contemporary — feels current without chasing trends', do: '"Most brands are still solving yesterday\'s problems."', dont: '"We\'re totally vibing with the zeitgeist of today\'s discourse 💅"' },
+  considered:    { means: 'Thoughtful and measured — speaks carefully about big ideas', do: '"We\'ve been sitting with this question for two years. Here\'s what we think."', dont: '"After careful consideration of all potential variables, we have determined..."' },
+  grounded:      { means: 'Rooted in reality and practical outcomes', do: '"Forty families fed last month. That\'s what this looks like."', dont: '"We are making impactful positive impacts in the impact space."' },
+  candid:        { means: 'Straight-talking, even on hard topics', do: '"We made a mistake. Here\'s what happened and what we changed."', dont: '"Due to operational complexities, outcomes did not align with expectations."' },
+  evocative:     { means: 'Sensory, specific language — creates mental images', do: '"Salt air, cast-iron, three generations of the same recipe."', dont: '"Our immersive sensory experience creates memories and emotional connections."' },
+  practical:     { means: 'Action-oriented and focused on tangible results', do: '"Do this one thing before bed. It takes four minutes."', dont: '"Empower yourself with the tools and resources to facilitate optimal outcomes."' },
 };
 
 const CHANNEL_TONE_SHIFTS = [
-  { channel: 'Instagram / TikTok',    tone: 'Casual, high energy, visual-first. Short captions. Lean into emotion and storytelling over information.' },
-  { channel: 'LinkedIn',              tone: 'Professional but personal. Lead with insight. Longer-form is fine if the value is genuine.' },
-  { channel: 'Email',                 tone: 'Friendly and direct. Write to one person, not a list. Subject lines reward the click, not bait it.' },
-  { channel: 'Blog / Long-form',      tone: 'Informative and considered. Show your thinking. Avoid padding — every paragraph earns its place.' },
-  { channel: 'Product / UI copy',     tone: 'Clear, minimal, instructive. Reduce cognitive load. Never be clever at the expense of clarity.' },
-  { channel: 'Customer support',      tone: 'Empathetic, calm, solution-focused. Never defensive. Treat problems as opportunities to build trust.' },
+  { channel: 'Instagram / TikTok', tone: 'Casual, high-energy, visual-first. Short captions.', example: '"This one took six months. Totally worth it."' },
+  { channel: 'LinkedIn',           tone: 'Professional but personal. Lead with insight.', example: '"The thing no one tells you about scaling a food brand…"' },
+  { channel: 'Email',              tone: 'Write to one person, not a list. Reward the click.', example: '"Hey — quick one before you head into the weekend."' },
+  { channel: 'Blog / Long-form',   tone: 'Show your thinking. Every paragraph earns its place.', example: '"Here\'s the question we kept getting wrong for two years."' },
+  { channel: 'Product / UI',       tone: 'Clear, minimal. Never clever at the expense of clarity.', example: '"Save changes" not "Commit your preferences".' },
+  { channel: 'Customer support',   tone: 'Empathetic, calm, never defensive. Trust-building.', example: '"That\'s completely understandable — here\'s what we can do."' },
 ];
 
 const VOICE_SAMPLES = {
@@ -635,31 +719,51 @@ const VOICE_SAMPLES = {
 };
 
 function generateBrandVoice(brandData, guidance = '') {
-  const { brandName, toneWords = [], industry = 'technology', audience = '', avoid = '' } = brandData;
+  const { brandName, toneWords = [], industry = 'technology', audience = '', avoid = '', archetype = '', formality = 50, enthusiasm = 50 } = brandData;
   const toneStr = (toneWords.join(' ') + ' ' + guidance).toLowerCase();
 
-  // Resolve up to 4 voice traits
-  const resolved = toneWords
-    .map(w => w.trim().toLowerCase())
-    .filter(w => TRAIT_LIBRARY[w])
-    .slice(0, 4);
-  // Fill with closest known traits if < 4
-  if (resolved.length < 4) {
-    const fallbacks = ['honest','clear','professional','friendly'].filter(f => !resolved.includes(f));
-    while (resolved.length < 4 && fallbacks.length) resolved.push(fallbacks.shift());
-  }
-  const traits = resolved.map(w => ({ word: w, ...TRAIT_LIBRARY[w] }));
+  // Archetype-driven intro
+  const arch = ARCHETYPES[archetype];
+  const archIntroText = arch ? arch.archIntro(brandName) : null;
+
+  // Resolve up to 4 voice traits (from toneWords + archetype traits)
+  const candidateTraits = [...toneWords.map(w => w.trim().toLowerCase()), ...(arch?.traits || [])];
+  const resolved = candidateTraits.filter(w => TRAIT_LIBRARY[w]).filter((w, i, a) => a.indexOf(w) === i).slice(0, 4);
+  const fallbacks = ['honest','clear','professional','friendly'].filter(f => !resolved.includes(f));
+  while (resolved.length < 4 && fallbacks.length) resolved.push(fallbacks.shift());
+
+  const traits = resolved.map(w => ({
+    trait: w,
+    means: TRAIT_LIBRARY[w].means,
+    do_example:   TRAIT_LIBRARY[w].do,
+    dont_example: TRAIT_LIBRARY[w].dont,
+  }));
 
   // Intro paragraph
-  const t = traits.map(t => t.word);
-  const connector = toneStr.includes('professional') ? 'confident' : (toneStr.includes('warm') ? 'warm' : 'consistent');
+  const t = traits.map(t => t.trait);
   const audienceClause = audience ? ` for ${audience.split(',')[0].trim().toLowerCase()}` : '';
-  const intro = `${brandName}'s voice is ${t[0]}, ${t[1]}, and ${t[2]}${t[3] ? ` — and always ${t[3]}` : ''}. Every communication${audienceClause} should feel like it comes from a ${connector}, knowledgeable source who has something worth saying. ${avoid ? `We never ${avoid.split(',')[0].trim().toLowerCase()}.` : ''}`;
+  const avoidClause = avoid ? ` We never ${avoid.split(',')[0].trim().toLowerCase()}.` : '';
+  const intro = archIntroText
+    ? `${archIntroText}${avoidClause}`
+    : `${brandName}'s voice is ${t[0]}, ${t[1]}, and ${t[2]}${t[3] ? ` — always ${t[3]}` : ''}. Every word${audienceClause} earns its place.${avoidClause}`;
+
+  // Writing rules based on tone sliders (0=formal/measured, 100=casual/enthusiastic)
+  const fml = formality;   // 0=formal, 100=casual
+  const ent = enthusiasm;  // 0=measured, 100=enthusiastic
+
+  const writingRules = {
+    contractions:    fml < 30 ? 'Avoid contractions — full forms only (e.g. "it is", "do not").' : fml < 60 ? 'Contractions welcome in conversational contexts.' : 'Always use contractions — formal phrasing feels distant.',
+    sentenceLength:  fml < 30 ? 'Prefer longer, complete sentences with measured cadence.' : fml < 60 ? 'Mix short punchy sentences with longer explanatory ones.' : 'Favour short, direct sentences. One idea per sentence.',
+    fragments:       fml < 40 ? 'Complete sentences throughout.' : 'Fragments OK for emphasis. Especially in headlines.',
+    punctuation:     fml < 30 ? 'No exclamation marks. Em-dashes and semicolons where appropriate.' : fml < 65 ? 'One exclamation mark per piece, max.' : 'Exclamation marks OK but not stacked.',
+    voiceEmotion:    ent < 30 ? 'Understated — let facts carry the weight. No hype.' : ent < 65 ? 'Measured warmth — enthusiasm is implied, not performed.' : 'Active, energetic voice. Enthusiasm is part of the brand.',
+    headlines:       ent < 30 ? 'Declarative — state the point plainly.' : ent < 65 ? 'Lead with value or curiosity.' : 'Bold, action-oriented headlines. Start with a verb.',
+  };
 
   const sampleFn = VOICE_SAMPLES[industry] || VOICE_SAMPLES['technology'];
   const sample   = sampleFn(brandName, toneWords);
 
-  return { intro, traits, channels: CHANNEL_TONE_SHIFTS, sample };
+  return { intro, traits, writingRules, channels: CHANNEL_TONE_SHIFTS, sample };
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -855,25 +959,39 @@ function renderTypography(pair, brandName) {
 function renderVoice(voiceData) {
   const traitCards = voiceData.traits.map(t => `
     <div class="voice-trait">
-      <div class="voice-trait-name">${cap(t.word)}</div>
-      <div class="voice-trait-desc">${t.desc}</div>
-      <div class="voice-trait-not"><strong>But:</strong> ${t.not}</div>
+      <div class="voice-trait-name">${cap(t.trait)}</div>
+      <div class="voice-trait-means">${t.means}</div>
+      <div class="voice-do-dont">
+        <div class="voice-do"><span class="do-label">DO</span>${t.do_example}</div>
+        <div class="voice-dont"><span class="dont-label">DON'T</span>${t.dont_example}</div>
+      </div>
     </div>`).join('');
 
+  const wr = voiceData.writingRules || {};
+  const writingRuleRows = Object.entries(wr).map(([key, val]) => {
+    const labels = { contractions:'Contractions', sentenceLength:'Sentence length', fragments:'Fragments', punctuation:'Punctuation', voiceEmotion:'Emotional register', headlines:'Headlines' };
+    return `<div class="writing-rule"><span class="writing-rule-key">${labels[key] || key}</span><span class="writing-rule-val">${val}</span></div>`;
+  }).join('');
+
   const channelRows = voiceData.channels.map(c => `
-    <tr>
-      <td><span class="channel-name">${c.channel}</span></td>
-      <td>${c.tone}</td>
-    </tr>`).join('');
+    <div class="voice-channel-row">
+      <div class="voice-channel-name">${c.channel}</div>
+      <div class="voice-channel-tone">${c.tone}</div>
+      <div class="voice-channel-example">${c.example}</div>
+    </div>`).join('');
 
   return `
     <p class="voice-intro">${voiceData.intro}</p>
+
+    <div class="voice-section-label">Voice traits — Do/Don't</div>
     <div class="voice-traits">${traitCards}</div>
-    <p class="strategy-section-title">Tone by channel</p>
-    <table class="voice-channel-table">
-      <thead><tr><th>Channel</th><th>How tone shifts</th></tr></thead>
-      <tbody>${channelRows}</tbody>
-    </table>
+
+    <div class="voice-section-label">Writing rules</div>
+    <div class="writing-rules">${writingRuleRows}</div>
+
+    <div class="voice-section-label">Tone by channel</div>
+    <div class="voice-channels">${channelRows}</div>
+
     <div class="voice-sample">
       <div class="voice-sample-label">Voice in action</div>
       <p class="voice-sample-text">${voiceData.sample}</p>
@@ -908,6 +1026,129 @@ function selectTagline(idx) {
 /* ─────────────────────────────────────────────────────────────
    16. RENDER — VISUAL MOCKUPS (5 distinct contexts)
    ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   WORDMARK GENERATOR & RENDERER
+   ───────────────────────────────────────────────────────────── */
+
+function generateWordmark(brandData, fonts, palette) {
+  const { brandName, archetype = '', taglines = [] } = brandData;
+  const arch = ARCHETYPES[archetype];
+  const tagline = taglines[0]?.text || '';
+
+  // Per-archetype letterform choices
+  const wWeight    = arch?.wordmarkWeight || fonts.hw || '700';
+  const wCase      = arch?.wordmarkCase  || (fonts.allCaps ? 'upper' : 'title');
+  const wTracking  = fonts.wordmarkTracking || '0em';
+
+  const displayName = wCase === 'upper' ? brandName.toUpperCase()
+                    : wCase === 'lower' ? brandName.toLowerCase()
+                    : brandName;
+
+  // Initials for marked variant
+  const initials = brandName.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+
+  return { displayName, initials, tagline, wWeight, wCase, wTracking, fonts, palette };
+}
+
+function renderWordmark(wmData) {
+  if (!wmData) return '<p class="voice-intro">Generate a brand kit first to see your wordmarks.</p>';
+  const { displayName, initials, tagline, wWeight, wTracking, fonts, palette } = wmData;
+  const p  = palette.primary.hex;
+  const a  = palette.accent.hex;
+  const lc = palette.light.hex;
+  const dc = palette.dark.hex;
+  const tp = textOnBg(p);
+  const td = textOnBg(dc);
+  const tl = textOnBg(lc);
+  const hF = `'${fonts.heading}',Georgia,serif`;
+  const shortTag = tagline.length > 50 ? tagline.slice(0, 50) + '…' : tagline;
+
+  function wmCard(id, label, svgContent, desc) {
+    return `
+      <div class="wm-card" id="wm-card-${id}">
+        <div class="wm-preview">${svgContent}</div>
+        <div class="wm-card-foot">
+          <div>
+            <div class="wm-label">${label}</div>
+            <div class="wm-desc">${desc}</div>
+          </div>
+          <button class="btn btn--ghost btn--sm wm-download-btn" onclick="downloadWordmark('${id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            PNG
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // 1. Logotype — name in heading font, natural case
+  const logotypeSvg = `
+    <svg id="svg-logotype" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${lc}"/>
+      <text x="240" y="100" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
+        font-size="56" letter-spacing="${wTracking}" fill="${p}"
+        text-anchor="middle" dominant-baseline="middle">${displayName}</text>
+    </svg>`;
+
+  // 2. Display — all caps, tight track, on dark
+  const displayStr = displayName.toUpperCase();
+  const displaySvg = `
+    <svg id="svg-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${dc}"/>
+      <text x="240" y="96" font-family="${hF.replace(/'/g,'')}" font-weight="900"
+        font-size="52" letter-spacing="0.12em" fill="${a}"
+        text-anchor="middle" dominant-baseline="middle">${displayStr}</text>
+    </svg>`;
+
+  // 3. Stacked — name + tagline, white bg
+  const stackedSvg = `
+    <svg id="svg-stacked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="#ffffff"/>
+      <line x1="60" y1="80" x2="420" y2="80" stroke="${a}" stroke-width="1" opacity="0.25"/>
+      <text x="240" y="62" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
+        font-size="38" letter-spacing="${wTracking}" fill="${p}"
+        text-anchor="middle" dominant-baseline="middle">${displayName}</text>
+      <text x="240" y="100" font-family="Inter,system-ui,sans-serif" font-weight="400"
+        font-size="13" letter-spacing="0.08em" fill="${textOnBg('#ffffff')}" opacity="0.55"
+        text-anchor="middle" dominant-baseline="middle">${shortTag.toUpperCase()}</text>
+    </svg>`;
+
+  // 4. Marked — geometric shape + initials + name
+  const markedSvg = `
+    <svg id="svg-marked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="100%" height="100%">
+      <rect width="480" height="160" fill="${lc}"/>
+      <rect x="48" y="40" width="80" height="80" rx="12" fill="${p}"/>
+      <text x="88" y="82" font-family="${hF.replace(/'/g,'')}" font-weight="900"
+        font-size="32" fill="${tp}" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+      <text x="162" y="74" font-family="${hF.replace(/'/g,'')}" font-weight="${wWeight}"
+        font-size="38" letter-spacing="${wTracking}" fill="${p}"
+        text-anchor="start" dominant-baseline="middle">${displayName}</text>
+      <text x="163" y="107" font-family="Inter,system-ui,sans-serif" font-weight="500"
+        font-size="12" letter-spacing="0.09em" fill="${tl}" opacity="0.5"
+        text-anchor="start" dominant-baseline="middle">${shortTag || ''}</text>
+    </svg>`;
+
+  return `
+    <div class="wm-grid">
+      ${wmCard('logotype', 'Logotype', logotypeSvg, 'Heading font · natural case · standard tracking')}
+      ${wmCard('display',  'Display',  displaySvg,  'All caps · heavy weight · accent colour on dark')}
+      ${wmCard('stacked',  'Lockup',   stackedSvg,  'Name + tagline stacked · rule separator')}
+      ${wmCard('marked',   'Mark + Name', markedSvg, 'Geometric mark with initials + wordmark')}
+    </div>
+    <p class="type-pairing-desc" style="margin-top:20px;">Wordmarks use <strong>${fonts.heading}</strong> — weight ${wWeight}, tracking ${wTracking}. Download each as PNG or copy the SVG source code from the browser inspector for vector use.</p>`;
+}
+
+async function downloadWordmark(variantId) {
+  const svgEl = document.getElementById(`svg-${variantId}`);
+  if (!svgEl) return;
+  const svg = new XMLSerializer().serializeToString(svgEl);
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `${(kit.brandData?.brandName || 'wordmark').replace(/\s+/g,'-').toLowerCase()}-${variantId}.svg`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function mockupCell(frameClass, innerHtml, label, context) {
   return `
@@ -1075,6 +1316,7 @@ const kit = {
   taglines:      [],
   activeTagline: 0,
   strategy:      null,
+  wordmark:      null,
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -1118,6 +1360,11 @@ function regenSection(section) {
       document.getElementById('strategy-content').innerHTML = renderStrategy(kit.strategy);
       break;
     }
+    case 'wordmark': {
+      kit.wordmark = generateWordmark({ ...bd, taglines: kit.taglines }, kit.fonts, kit.palette);
+      document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
+      break;
+    }
   }
   closeEdit(`${section}-edit`);
 }
@@ -1136,6 +1383,7 @@ function closeEdit(panelId) {
    ───────────────────────────────────────────────────────────── */
 
 function getBrandData() {
+  const archetypeEl = document.querySelector('.archetype-card.selected');
   return {
     brandName:   document.getElementById('brand-name').value.trim(),
     industry:    document.getElementById('industry').value,
@@ -1144,6 +1392,9 @@ function getBrandData() {
     audience:    document.getElementById('audience').value.trim(),
     toneWords:   document.getElementById('tone').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
     avoid:       document.getElementById('avoid').value.trim(),
+    archetype:   archetypeEl?.dataset.archetype || '',
+    formality:   parseInt(document.getElementById('slider-formality')?.value ?? 50, 10),
+    enthusiasm:  parseInt(document.getElementById('slider-enthusiasm')?.value ?? 50, 10),
   };
 }
 
@@ -1174,7 +1425,7 @@ async function generateKit(brandData) {
   await new Promise(r => setTimeout(r, 60));
   kit.palette = extracted.length >= 2
     ? buildPaletteFromExtracted(extracted, brandData)
-    : generatePaletteFromIndustry(brandData.industry, brandData.toneWords);
+    : generatePaletteFromIndustry(brandData.industry, brandData.toneWords, '', brandData.archetype);
 
   // Step 3: Fonts
   setLoadingLabel('Selecting typography…');
@@ -1202,11 +1453,14 @@ async function generateKit(brandData) {
   document.getElementById('tagline-content').innerHTML    = renderTagline(kit.taglines, 0);
   document.getElementById('strategy-content').innerHTML   = renderStrategy(kit.strategy);
 
-  // Mockup needs fonts — short wait for load
+  // Mockup + wordmark need fonts — short wait for load
   await document.fonts.ready;
   document.getElementById('mockup-content').innerHTML = renderMockup(
     kit.palette, kit.fonts, { ...brandData, taglines: kit.taglines }
   );
+
+  kit.wordmark = generateWordmark({ ...brandData, taglines: kit.taglines }, kit.fonts, kit.palette);
+  document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
 
   loadingState.hidden = true;
   results.hidden      = false;
@@ -1226,6 +1480,17 @@ function generateRandomData() {
   const tmpl       = RAND.byIndustry[industry];
   const brandName  = `${pick(RAND.adj)} ${pick(RAND.noun)}`;
   const desc       = tmpl.desc.replace('{WHAT}', tmpl.what).replace('{WHO}', 'people');
+
+  // Map industry to a likely archetype
+  const industryArchetypeMap = {
+    'technology': 'competence', 'food-beverage': 'sincerity', 'health-wellness': 'sincerity',
+    'fashion-beauty': 'sophistication', 'finance': 'competence', 'education': 'sincerity',
+    'arts-entertainment': 'excitement', 'real-estate': 'competence', 'travel-hospitality': 'excitement',
+    'nonprofit': 'sincerity', 'retail': 'excitement', 'professional-services': 'competence',
+  };
+  const archetype = industryArchetypeMap[industry] || pick(Object.keys(ARCHETYPES));
+  const arch = ARCHETYPES[archetype];
+
   return {
     brandName,
     industry,
@@ -1234,6 +1499,9 @@ function generateRandomData() {
     audience:    tmpl.audience,
     toneWords:   tmpl.tone.split(',').map(s => s.trim()),
     avoid:       RAND.avoid[industry] || 'generic, corporate, impersonal',
+    archetype,
+    formality:   arch.formality,
+    enthusiasm:  arch.enthusiasm,
   };
 }
 
@@ -1245,6 +1513,14 @@ function fillForm(data) {
   document.getElementById('audience').value    = data.audience   || '';
   document.getElementById('tone').value        = Array.isArray(data.toneWords) ? data.toneWords.join(', ') : (data.tone || '');
   document.getElementById('avoid').value       = data.avoid      || '';
+  // Archetype card
+  document.querySelectorAll('.archetype-card').forEach(c => c.classList.remove('selected'));
+  if (data.archetype) {
+    document.querySelector(`.archetype-card[data-archetype="${data.archetype}"]`)?.classList.add('selected');
+  }
+  // Tone sliders
+  if (data.formality  !== undefined) { const s = document.getElementById('slider-formality');  if (s) { s.value = data.formality;  updateSliderLabel('formality',  data.formality);  } }
+  if (data.enthusiasm !== undefined) { const s = document.getElementById('slider-enthusiasm'); if (s) { s.value = data.enthusiasm; updateSliderLabel('enthusiasm', data.enthusiasm); } }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1286,8 +1562,20 @@ async function loadDemo() {
   await generateKit({ ...DEMO, toneWords: DEMO.tone.split(',').map(s => s.trim()) });
 }
 
+function updateSliderLabel(type, val) {
+  const el = document.getElementById(`slider-${type}-label`);
+  if (!el) return;
+  if (type === 'formality') {
+    const pct = parseInt(val, 10);
+    el.textContent = pct < 25 ? 'Very formal' : pct < 45 ? 'Formal' : pct < 55 ? 'Balanced' : pct < 75 ? 'Casual' : 'Very casual';
+  } else {
+    const pct = parseInt(val, 10);
+    el.textContent = pct < 25 ? 'Very measured' : pct < 45 ? 'Measured' : pct < 55 ? 'Balanced' : pct < 75 ? 'Enthusiastic' : 'Very enthusiastic';
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────
-   23. PHOTO UPLOAD HANDLING
+   PHOTO UPLOAD HANDLING
    ───────────────────────────────────────────────────────────── */
 
 const uploadedImages = []; // hidden img elements with loaded pixel data
@@ -1435,7 +1723,7 @@ function loadScript(src) {
    25. TAB NAVIGATION
    ───────────────────────────────────────────────────────────── */
 
-const TAB_ORDER = ['palette', 'typography', 'voice', 'tagline', 'mockup', 'strategy'];
+const TAB_ORDER = ['palette', 'typography', 'voice', 'tagline', 'mockup', 'strategy', 'wordmark'];
 let activeTab = 'palette';
 
 function switchTab(tabId) {
@@ -1504,6 +1792,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Demo button
   document.getElementById('demo-btn').addEventListener('click', () => loadDemo());
+
+  // Archetype cards
+  document.addEventListener('click', e => {
+    const card = e.target.closest('.archetype-card');
+    if (!card) return;
+    document.querySelectorAll('.archetype-card').forEach(c => c.classList.remove('selected'));
+    card.classList.toggle('selected', true);
+    // Pre-fill sliders from archetype defaults
+    const archId = card.dataset.archetype;
+    const arch = ARCHETYPES[archId];
+    if (arch) {
+      const fs = document.getElementById('slider-formality');
+      const es = document.getElementById('slider-enthusiasm');
+      if (fs) { fs.value = arch.formality;  updateSliderLabel('formality',  arch.formality);  }
+      if (es) { es.value = arch.enthusiasm; updateSliderLabel('enthusiasm', arch.enthusiasm); }
+    }
+  });
+
+  // Tone sliders
+  ['formality','enthusiasm'].forEach(type => {
+    document.getElementById(`slider-${type}`)?.addEventListener('input', e => updateSliderLabel(type, e.target.value));
+  });
 
   // Photo browse
   document.getElementById('photo-browse-btn').addEventListener('click', e => {
