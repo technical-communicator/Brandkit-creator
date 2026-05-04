@@ -2915,6 +2915,7 @@ async function generateKit(brandData) {
 
   kit.wordmark = generateWordmark({ ...brandData, taglines: kit.taglines }, kit.fonts, kit.palette);
   document.getElementById('wordmark-content').innerHTML = renderWordmark(kit.wordmark);
+  document.getElementById('ctas-content').innerHTML = renderCTAs(kit.palette, kit.fonts, brandData);
 
   loadingState.hidden = true;
   results.hidden      = false;
@@ -3177,7 +3178,7 @@ function loadScript(src) {
    25. TAB NAVIGATION
    ───────────────────────────────────────────────────────────── */
 
-const TAB_ORDER = ['palette', 'typography', 'voice', 'tagline', 'mockup', 'strategy', 'wordmark'];
+const TAB_ORDER = ['palette', 'typography', 'voice', 'tagline', 'mockup', 'strategy', 'wordmark', 'ctas'];
 let activeTab = 'palette';
 
 function switchTab(tabId) {
@@ -3365,6 +3366,182 @@ let _selEl    = null;                      // currently selected editable elemen
 let _dragOp   = null;                      // active drag/resize operation
 
 // ── Toggle entry points ───────────────────────────────────────
+
+/* ─────────────────────────────────────────────────────────────
+   HERO / FORM TOGGLE
+   ───────────────────────────────────────────────────────────── */
+
+function showBrandForm() {
+  document.getElementById('hero-panel').hidden = true;
+  document.getElementById('form-panel').hidden = false;
+  document.getElementById('brand-name').focus();
+}
+
+function hideBrandForm() {
+  document.getElementById('form-panel').hidden = true;
+  document.getElementById('hero-panel').hidden = false;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CTA LIBRARY
+   ───────────────────────────────────────────────────────────── */
+
+function renderCTAs(palette, fonts, brandData) {
+  const { industry = '' } = brandData;
+  const copy = MOCKUP_COPY[industry] || DEFAULT_COPY;
+  const p  = palette.primary.hex,   tp = textOnBg(p);
+  const s  = palette.secondary.hex, ts = textOnBg(s);
+  const a  = palette.accent.hex,    ta = textOnBg(a);
+  const lc = palette.light.hex,     tl = textOnBg(lc);
+  const dc = palette.dark.hex,      td = textOnBg(dc);
+  const bF = `'${fonts.body}',system-ui,sans-serif`;
+
+  // ── Button style showcase ──────────────────────────────────
+  const btnStyles = [
+    { label: 'Primary',   bg: p,             color: tp, border: 'none' },
+    { label: 'Accent',    bg: a,             color: ta, border: 'none' },
+    { label: 'Secondary', bg: s,             color: ts, border: 'none' },
+    { label: 'Outlined',  bg: 'transparent', color: p,  border: `2px solid ${p}` },
+    { label: 'Dark',      bg: dc,            color: td, border: 'none' },
+    { label: 'Ghost',     bg: 'transparent', color: p,  border: 'none' },
+  ];
+  const showcaseHTML = `
+    <div class="cta-showcase">
+      <p class="cta-showcase-label">Button styles — all rendered in your brand colours</p>
+      <div class="cta-showcase-row">
+        ${btnStyles.map(bs => `
+          <div class="cta-showcase-item">
+            <button class="cta-showcase-btn" style="background:${bs.bg};color:${bs.color};border:${bs.border};font-family:${bF};">${bs.label}</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  // ── CTA groups ────────────────────────────────────────────
+  const groups = [
+    {
+      label: 'Convert', desc: 'Drive sign-ups, trials and purchases',
+      items: [
+        { text: copy.cta1,       context: 'Hero · pricing · product pages' },
+        { text: copy.cta2,       context: 'Secondary action alongside primary' },
+        { text: copy.cta3,       context: 'Mid-page · modal prompts' },
+        { text: 'Get started',   context: 'Low-friction universal entry' },
+      ],
+    },
+    {
+      label: 'Engage', desc: 'Invite exploration and discovery',
+      items: [
+        { text: 'Learn more',        context: 'Feature cards · blog entries' },
+        { text: 'See how it works',  context: 'Product demos · landing pages' },
+        { text: 'Explore',           context: 'Category pages · galleries' },
+        { text: 'Watch now',         context: 'Video content · tutorials' },
+      ],
+    },
+    {
+      label: 'Connect', desc: 'Build your list and community',
+      items: [
+        { text: copy.subscribe,  context: 'Footer · sidebar · email popups' },
+        { text: copy.story_cta,  context: 'Instagram · TikTok stories' },
+        { text: 'Get in touch',  context: 'Contact · about · footer' },
+        { text: 'Follow us',     context: 'Social profiles · share prompts' },
+      ],
+    },
+    {
+      label: 'Navigate', desc: 'Guide users through your content',
+      items: [
+        { text: 'View all',    context: 'Product listings · blog index' },
+        { text: 'Read more',   context: 'Blog cards · article teasers' },
+        { text: 'See our work',context: 'Portfolio · case studies' },
+        { text: 'Back to top', context: 'Long-form pages · footer' },
+      ],
+    },
+  ];
+
+  const groupsHTML = groups.map(g => {
+    const cards = g.items.map(item => {
+      const safe = item.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `
+        <div class="cta-card">
+          <div class="cta-card-preview">
+            <button style="background:${p};color:${tp};font-family:${bF};font-size:13px;font-weight:700;padding:9px 20px;border-radius:5px;border:none;letter-spacing:0.01em;cursor:default;white-space:nowrap;">${item.text}</button>
+          </div>
+          <div class="cta-card-info">
+            <span class="cta-card-text">${item.text}</span>
+            <span class="cta-card-context">${item.context}</span>
+          </div>
+          <div class="cta-card-actions">
+            <button class="btn btn--xs" onclick="copyCTAText(this,'${safe}')">Copy</button>
+            <button class="btn btn--xs btn--ghost" onclick="showCTACode('${safe}')">Code</button>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="cta-group">
+        <div class="cta-group-head">
+          <span class="cta-group-title">${g.label}</span>
+          <span class="cta-group-desc">${g.desc}</span>
+        </div>
+        <div class="cta-grid">${cards}</div>
+      </div>`;
+  }).join('');
+
+  return `${showcaseHTML}<div class="cta-groups">${groupsHTML}</div>`;
+}
+
+function copyCTAText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  });
+}
+
+function showCTACode(text) {
+  if (!kit.palette || !kit.fonts) return;
+  const p  = kit.palette.primary.hex,   tp = textOnBg(p);
+  const s  = kit.palette.secondary.hex, ts = textOnBg(s);
+  const a  = kit.palette.accent.hex,    ta = textOnBg(a);
+  const lc = kit.palette.light.hex;
+  const dc = kit.palette.dark.hex,      td = textOnBg(dc);
+  const bf = kit.fonts.body;
+  const gf = encodeURIComponent(bf) + ':wght@400;600;700';
+
+  _snippetCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTA — ${text}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=${gf}&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: '${bf}', system-ui, sans-serif; background: ${lc}; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; padding: 48px; }
+    .cta { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 15px; font-weight: 700; padding: 13px 26px; border-radius: 6px; cursor: pointer; text-decoration: none; letter-spacing: 0.01em; transition: opacity 0.15s, transform 0.15s; line-height: 1.2; }
+    .cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .cta-primary   { background: ${p};          color: ${tp}; border: none; }
+    .cta-accent    { background: ${a};          color: ${ta}; border: none; }
+    .cta-secondary { background: ${s};          color: ${ts}; border: none; }
+    .cta-outline   { background: transparent;   color: ${p};  border: 2px solid ${p}; }
+    .cta-dark      { background: ${dc};         color: ${td}; border: none; }
+    .cta-ghost     { background: transparent;   color: ${p};  border: none; padding-left: 0; padding-right: 0; }
+  </style>
+</head>
+<body>
+  <button class="cta cta-primary">${text}</button>
+  <button class="cta cta-accent">${text}</button>
+  <button class="cta cta-secondary">${text}</button>
+  <button class="cta cta-outline">${text}</button>
+  <button class="cta cta-dark">${text}</button>
+  <button class="cta cta-ghost">${text} &rarr;</button>
+</body>
+</html>`;
+
+  document.getElementById('code-modal-title').textContent = `"${text}"`;
+  document.getElementById('code-modal-sub').textContent   = '6 button style variants in your brand colours';
+  document.getElementById('code-modal-code').textContent  = _snippetCode;
+  document.getElementById('code-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
 
 function toggleCellEdit(cellId) {
   if (_editMode.type === 'cell' && _editMode.id === cellId) { _exitEdit(); return; }

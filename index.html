@@ -27,152 +27,172 @@
     <section class="input-section" id="input-section">
       <div class="container">
 
-        <div class="input-intro">
-          <h1>Build your brand kit in seconds.</h1>
-          <p>Upload photos to pull color and mood from your visuals, or fill in the form. The randomizer generates everything automatically — no photos or form required.</p>
+        <!-- ── Hero panel (default) ──────────────────────── -->
+        <div class="hero-panel" id="hero-panel">
+          <p class="hero-kicker">Free · instant · no sign-up</p>
+          <h1 class="hero-title">Your brand,<br>designed in seconds.</h1>
+          <p class="hero-body">A complete identity — colours, fonts, wordmarks, mockups and a content strategy — generated from just a brand name.</p>
+          <div class="hero-actions">
+            <button type="button" class="btn btn--hero-primary" id="randomize-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:18px;height:18px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+              Generate an example
+            </button>
+            <button type="button" class="btn btn--hero-ghost" onclick="showBrandForm()">
+              Build my own brand
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:15px;height:15px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </button>
+          </div>
+          <p class="hero-note">No account needed &middot; Instant results &middot; Fully customisable</p>
         </div>
 
-        <!-- Photo Upload -->
-        <div class="photo-upload-wrap">
-          <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Upload brand photos">
-            <div class="drop-zone-idle" id="drop-idle">
-              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-              </svg>
-              <p class="drop-label">Drop photos here or <button type="button" class="link-btn" id="photo-browse-btn">browse</button></p>
-              <p class="drop-hint">1–3 photos · JPEG, PNG, WebP · Color &amp; mood pull from these first</p>
-            </div>
-            <div class="photo-previews" id="photo-previews" hidden></div>
-          </div>
-          <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple hidden>
-        </div>
+        <!-- ── Form panel (shown after "Build my own") ───── -->
+        <div class="form-panel" id="form-panel" hidden>
 
-        <!-- Brand Form -->
-        <form id="brand-form" class="brand-form" novalidate>
-          <div class="form-grid">
-
-            <div class="form-group">
-              <label for="brand-name">Brand Name <span class="req">*</span></label>
-              <input type="text" id="brand-name" name="brand-name" placeholder="e.g., Verdant Kitchen" autocomplete="off">
-            </div>
-
-            <div class="form-group">
-              <label for="industry">Industry <span class="req">*</span></label>
-              <select id="industry" name="industry">
-                <option value="">Select industry…</option>
-                <option value="technology">Technology &amp; Software</option>
-                <option value="food-beverage">Food &amp; Beverage</option>
-                <option value="health-wellness">Health &amp; Wellness</option>
-                <option value="fashion-beauty">Fashion &amp; Beauty</option>
-                <option value="finance">Finance &amp; Fintech</option>
-                <option value="education">Education</option>
-                <option value="arts-entertainment">Arts &amp; Entertainment</option>
-                <option value="real-estate">Real Estate</option>
-                <option value="travel-hospitality">Travel &amp; Hospitality</option>
-                <option value="nonprofit">Non-profit &amp; Social Impact</option>
-                <option value="retail">Retail &amp; E-commerce</option>
-                <option value="professional-services">Professional Services</option>
-              </select>
-            </div>
-
-            <div class="form-group form-group--full">
-              <label for="description">One-sentence description</label>
-              <input type="text" id="description" name="description" placeholder="e.g., A plant-based restaurant celebrating seasonal, local ingredients">
-            </div>
-
-            <div class="form-group form-group--full">
-              <label for="what-does">What does the business or project do?</label>
-              <textarea id="what-does" name="what-does" rows="2" placeholder="Describe what you actually make, serve, or deliver…"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="audience">Target audience</label>
-              <input type="text" id="audience" name="audience" placeholder="e.g., Health-conscious urban professionals, 25–45">
-            </div>
-
-            <div class="form-group">
-              <label for="tone">Tone adjectives <span class="field-note">(comma-separated)</span></label>
-              <input type="text" id="tone" name="tone" placeholder="e.g., warm, honest, approachable, fresh">
-            </div>
-
-            <div class="form-group form-group--full">
-              <label for="avoid">Anything to avoid</label>
-              <input type="text" id="avoid" name="avoid" placeholder="e.g., clinical language, diet culture messaging, corporate jargon">
-            </div>
-
-          </div>
-        </form>
-
-        <!-- Brand Personality -->
-        <div class="personality-section">
-          <div class="personality-head">
-            <div class="personality-title">Brand personality <span class="field-note optional-label">optional</span></div>
-            <p class="personality-sub">Pick an archetype and tune the voice sliders — or leave blank to let the generator decide.</p>
-          </div>
-
-          <div class="archetype-grid">
-            <button type="button" class="archetype-card" data-archetype="sincerity">
-              <span class="arch-emoji">🌿</span>
-              <span class="arch-label">Sincere</span>
-              <span class="arch-desc">Honest · Warm · Wholesome</span>
+          <!-- Core: name + industry + generate -->
+          <div class="form-core">
+            <button type="button" class="form-back-btn" onclick="hideBrandForm()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+              Back
             </button>
-            <button type="button" class="archetype-card" data-archetype="excitement">
-              <span class="arch-emoji">⚡</span>
-              <span class="arch-label">Exciting</span>
-              <span class="arch-desc">Daring · Spirited · Bold</span>
-            </button>
-            <button type="button" class="archetype-card" data-archetype="competence">
-              <span class="arch-emoji">🎯</span>
-              <span class="arch-label">Competent</span>
-              <span class="arch-desc">Reliable · Expert · Clear</span>
-            </button>
-            <button type="button" class="archetype-card" data-archetype="sophistication">
-              <span class="arch-emoji">✦</span>
-              <span class="arch-label">Sophisticated</span>
-              <span class="arch-desc">Elegant · Refined · Chic</span>
-            </button>
-            <button type="button" class="archetype-card" data-archetype="ruggedness">
-              <span class="arch-emoji">🏔</span>
-              <span class="arch-label">Rugged</span>
-              <span class="arch-desc">Tough · Grounded · Direct</span>
-            </button>
-          </div>
-
-          <div class="tone-sliders">
-            <div class="tone-slider-row">
-              <div class="tone-slider-labels">
-                <span>Formal</span>
-                <span class="tone-slider-value" id="slider-formality-label">Balanced</span>
-                <span>Casual</span>
+            <h2 class="form-heading">Your brand</h2>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="brand-name">Brand name <span class="req">*</span></label>
+                <input type="text" id="brand-name" name="brand-name" placeholder="e.g., Verdant Kitchen" autocomplete="off">
               </div>
-              <input type="range" id="slider-formality" class="tone-range" min="0" max="100" value="50" step="1">
-            </div>
-            <div class="tone-slider-row">
-              <div class="tone-slider-labels">
-                <span>Measured</span>
-                <span class="tone-slider-value" id="slider-enthusiasm-label">Balanced</span>
-                <span>Enthusiastic</span>
+              <div class="form-group">
+                <label for="industry">Industry</label>
+                <select id="industry" name="industry">
+                  <option value="">Select industry…</option>
+                  <option value="technology">Technology &amp; Software</option>
+                  <option value="food-beverage">Food &amp; Beverage</option>
+                  <option value="health-wellness">Health &amp; Wellness</option>
+                  <option value="fashion-beauty">Fashion &amp; Beauty</option>
+                  <option value="finance">Finance &amp; Fintech</option>
+                  <option value="education">Education</option>
+                  <option value="arts-entertainment">Arts &amp; Entertainment</option>
+                  <option value="real-estate">Real Estate</option>
+                  <option value="travel-hospitality">Travel &amp; Hospitality</option>
+                  <option value="nonprofit">Non-profit &amp; Social Impact</option>
+                  <option value="retail">Retail &amp; E-commerce</option>
+                  <option value="professional-services">Professional Services</option>
+                </select>
               </div>
-              <input type="range" id="slider-enthusiasm" class="tone-range" min="0" max="100" value="50" step="1">
+            </div>
+            <div class="form-core-actions">
+              <button type="button" class="btn btn--primary" id="generate-btn">
+                Generate Brand Kit
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+              </button>
+              <button type="button" class="btn btn--ghost" id="demo-btn">Show me an example instead</button>
             </div>
           </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="action-bar">
-          <button type="button" class="btn btn--demo" id="demo-btn" title="Auto-populate with a sample brand and generate">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            Show me how it works
-          </button>
-          <button type="button" class="btn btn--ghost" id="randomize-btn" title="Generate a random brand kit — no form or photos needed">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg>
-            Randomize
-          </button>
-          <button type="button" class="btn btn--primary" id="generate-btn">
-            Generate Brand Kit
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
-          </button>
-        </div>
+          <!-- Details: optional extra context -->
+          <details class="form-details">
+            <summary class="form-details-summary">
+              Add more detail <span class="form-optional-tag">optional</span>
+            </summary>
+            <div class="form-details-body">
+
+              <!-- Photo Upload -->
+              <div class="photo-upload-wrap">
+                <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Upload brand photos">
+                  <div class="drop-zone-idle" id="drop-idle">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                    </svg>
+                    <p class="drop-label">Drop photos here or <button type="button" class="link-btn" id="photo-browse-btn">browse</button></p>
+                    <p class="drop-hint">1–3 photos · JPEG, PNG, WebP · Colour &amp; mood extracted from these first</p>
+                  </div>
+                  <div class="photo-previews" id="photo-previews" hidden></div>
+                </div>
+                <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple hidden>
+              </div>
+
+              <!-- Extended brand fields -->
+              <form id="brand-form" class="brand-form" novalidate>
+                <div class="form-grid">
+                  <div class="form-group form-group--full">
+                    <label for="description">One-sentence description</label>
+                    <input type="text" id="description" name="description" placeholder="e.g., A plant-based restaurant celebrating seasonal, local ingredients">
+                  </div>
+                  <div class="form-group form-group--full">
+                    <label for="what-does">What does the business do?</label>
+                    <textarea id="what-does" name="what-does" rows="2" placeholder="Describe what you make, serve, or deliver…"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="audience">Target audience</label>
+                    <input type="text" id="audience" name="audience" placeholder="e.g., Health-conscious urban professionals, 25–45">
+                  </div>
+                  <div class="form-group">
+                    <label for="tone">Tone adjectives <span class="field-note">(comma-separated)</span></label>
+                    <input type="text" id="tone" name="tone" placeholder="e.g., warm, honest, approachable, fresh">
+                  </div>
+                  <div class="form-group form-group--full">
+                    <label for="avoid">Anything to avoid</label>
+                    <input type="text" id="avoid" name="avoid" placeholder="e.g., clinical language, corporate jargon">
+                  </div>
+                </div>
+              </form>
+
+              <!-- Brand Personality -->
+              <div class="personality-section">
+                <div class="personality-head">
+                  <div class="personality-title">Brand personality <span class="field-note optional-label">optional</span></div>
+                  <p class="personality-sub">Pick an archetype and tune the voice sliders — or leave blank to let the generator decide.</p>
+                </div>
+                <div class="archetype-grid">
+                  <button type="button" class="archetype-card" data-archetype="sincerity">
+                    <span class="arch-emoji">🌿</span>
+                    <span class="arch-label">Sincere</span>
+                    <span class="arch-desc">Honest · Warm · Wholesome</span>
+                  </button>
+                  <button type="button" class="archetype-card" data-archetype="excitement">
+                    <span class="arch-emoji">⚡</span>
+                    <span class="arch-label">Exciting</span>
+                    <span class="arch-desc">Daring · Spirited · Bold</span>
+                  </button>
+                  <button type="button" class="archetype-card" data-archetype="competence">
+                    <span class="arch-emoji">🎯</span>
+                    <span class="arch-label">Competent</span>
+                    <span class="arch-desc">Reliable · Expert · Clear</span>
+                  </button>
+                  <button type="button" class="archetype-card" data-archetype="sophistication">
+                    <span class="arch-emoji">✦</span>
+                    <span class="arch-label">Sophisticated</span>
+                    <span class="arch-desc">Elegant · Refined · Chic</span>
+                  </button>
+                  <button type="button" class="archetype-card" data-archetype="ruggedness">
+                    <span class="arch-emoji">🏔</span>
+                    <span class="arch-label">Rugged</span>
+                    <span class="arch-desc">Tough · Grounded · Direct</span>
+                  </button>
+                </div>
+                <div class="tone-sliders">
+                  <div class="tone-slider-row">
+                    <div class="tone-slider-labels">
+                      <span>Formal</span>
+                      <span class="tone-slider-value" id="slider-formality-label">Balanced</span>
+                      <span>Casual</span>
+                    </div>
+                    <input type="range" id="slider-formality" class="tone-range" min="0" max="100" value="50" step="1">
+                  </div>
+                  <div class="tone-slider-row">
+                    <div class="tone-slider-labels">
+                      <span>Measured</span>
+                      <span class="tone-slider-value" id="slider-enthusiasm-label">Balanced</span>
+                      <span>Enthusiastic</span>
+                    </div>
+                    <input type="range" id="slider-enthusiasm" class="tone-range" min="0" max="100" value="50" step="1">
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /form-details-body -->
+          </details>
+
+        </div><!-- /form-panel -->
 
       </div>
     </section>
@@ -237,6 +257,9 @@
               </button>
               <button class="tab-btn" data-tab="wordmark" role="tab" aria-selected="false" aria-controls="panel-wordmark">
                 <span class="tab-num">07</span><span class="tab-label">Wordmark</span>
+              </button>
+              <button class="tab-btn" data-tab="ctas" role="tab" aria-selected="false" aria-controls="panel-ctas">
+                <span class="tab-num">08</span><span class="tab-label">CTAs</span>
               </button>
             </nav>
           </div>
@@ -432,6 +455,17 @@
               </article>
             </div>
 
+            <!-- 08 CTAs -->
+            <div class="tab-panel" id="panel-ctas" role="tabpanel" hidden>
+              <article class="kit-section">
+                <div class="kit-section-head">
+                  <div class="kit-section-title"><span class="section-num">08</span><h3>Calls to Action</h3></div>
+                  <span class="section-badge">16 components</span>
+                </div>
+                <div class="section-content" id="ctas-content"></div>
+              </article>
+            </div>
+
           </div><!-- /container -->
         </div><!-- /tab-panels -->
 
@@ -443,7 +477,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
                 Previous
               </button>
-              <span class="panel-nav-count" id="panel-nav-count">1 / 7</span>
+              <span class="panel-nav-count" id="panel-nav-count">1 / 8</span>
               <button type="button" class="btn btn--ghost btn--sm" id="next-tab-btn">
                 Next
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
